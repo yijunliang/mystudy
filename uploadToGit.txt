@@ -1,0 +1,7 @@
+1、登录github得到要上传到的仓库地址https://github.com/yijunliang/mystudy
+
+2、eclipse中进入git视图，新建资源库
+
+3、右击项目-->team-->share project
+
+4、输入自己的github账号密码
