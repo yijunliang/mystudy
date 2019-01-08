@@ -5,3 +5,10 @@
 3、右击项目-->team-->share project
 
 4、输入自己的github账号密码
+
+5、上传到的资源库需要时公开的，否则无法关联到资源库
+
+6、关联资源库之后，可以到本地资源库目录下新增文件，使用git命令添加，然后push到远程服务器上(github),主要命令
+   git add 问价名;
+   git commit -m "注释";
+   git push -f;
