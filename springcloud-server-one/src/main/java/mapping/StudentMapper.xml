@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yjl.mapper.StudentMapper">
+
+	<resultMap type="com.yjl.entity.Student" id="baseMap">
+		<id property="id" column="id" />
+		<result property="studentName" column="student_name" />
+		<result property="studentSex" column="student_sex" />
+		<result property="studentSchool" column="student_school" />
+		<result property="studentClass" column="student_class" />
+		<result property="studentNo" column="student_no" />
+	</resultMap>
+
+	<insert id="insert" parameterType="com.yjl.entity.Student" useGeneratedKeys="true" keyProperty="id">
+		insert into t_student(student_name,student_sex,student_school,student_class,student_no)
+		values(#{studentName},#{studentSex},#{studentSchool},#{studentClass},#{studentNo})
+	</insert>
+
+	<delete id="delete" parameterType="java.lang.Integer">
+		delete from t_student where id = #{id}
+	</delete>
+
+	<update id="update" parameterType="com.yjl.entity.User">
+		update t_student set student_name = #{studentName}, student_sex = #{studentSex},
+		student_school = #{studentSchool}, student_class = #{studentClass}, student_no = #{studentNo}
+		where id = #{id}
+	</update>
+
+	<select id="findAll" parameterType="string"
+		resultMap="baseMap">
+		select * from t_student where 1 = 1 
+		<if test="_parameter != null and _parameter != ''">
+		    and student_name like CONCAT('%',#{studentName,jdbcType=VARCHAR},'%')
+		</if>
+	</select>
+	
+	<select id="findAllByLimit" parameterType="java.util.Map"
+		resultMap="baseMap">
+		select * from t_student where 1 = 1 
+		<if test="null != studentName and '' != studentName">
+		    and student_name like CONCAT('%',#{studentName,jdbcType=VARCHAR},'%')
+		</if>
+		limit #{start,jdbcType=INTEGER},#{limit,jdbcType=INTEGER}
+	</select>
+	
+	<select id="findAllByLimitTotal" parameterType="java.util.Map"
+		resultType="java.lang.Integer">
+		select count(1) from t_student where 1 = 1 
+		<if test="null != studentName and '' != studentName">
+		    and student_name like CONCAT('%',#{studentName,jdbcType=VARCHAR},'%')
+		</if>
+	</select>
+	
+	<select id="findOne" parameterType="java.lang.Integer"
+		resultMap="baseMap">
+		select * from t_student where id = #{id}
+	</select>
+	
+	<select id="getPassword" parameterType="java.lang.String" resultType="java.lang.String">
+	    select password from t_user where user_name = #{userName,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getRole" parameterType="java.lang.String" resultType="java.lang.String">
+	    select role from t_user where user_name = #{userName,jdbcType=VARCHAR}
+	</select>
+	
+</mapper>
