@@ -1,0 +1,81 @@
+1、过滤器(Filter)：
+	它依赖于servlet容器。在实现上，基于函数回调，它可以对几乎所有请求进行过滤，
+	但是缺点是一个过滤器实例只能在容器初始化时调用一次。
+	使用过滤器的目的，是用来做一些过滤操作，获取我们想要获取的数据，
+	比如：在Javaweb中，对传入的request、response提前过滤掉一些信息，
+	或者提前设置一些参数，然后再传入servlet或者Controller进行业务逻辑操作。
+	通常用的场景是：在过滤器中修改字符编码（CharacterEncodingFilter）、
+	在过滤器中修改HttpServletRequest的一些参数（XSSFilter(自定义过滤器)），如：过滤低俗文字、危险字符等。
+	
+2、拦截器(Interceptor)：
+	它依赖于web框架，在SpringMVC中就是依赖于SpringMVC框架。
+	在实现上,基于Java的反射机制，属于面向切面编程（AOP）的一种运用，就是在service或者一个方法前，
+	调用一个方法，或者在方法后，调用一个方法，比如动态代理就是拦截器的简单实现，
+	在调用方法前打印出字符串（或者做其它业务逻辑的操作），也可以在调用方法后打印出字符串，
+	甚至在抛出异常的时候做业务逻辑的操作。由于拦截器是基于web框架的调用，
+	因此可以使用Spring的依赖注入（DI）进行一些业务操作，同时一个拦截器实例在一个controller生命周期之内可以多次调用。
+	但是缺点是只能对controller请求进行拦截，对其他的一些比如直接访问静态资源的请求则没办法进行拦截处理。
+	
+3、结论
+    过滤器先于拦截器执行。大概顺序:过滤器-->拦截器方法开始-->拦截器方法结束-->过滤器结束
+    过滤器的运行是依赖于servlet容器，跟springmvc等框架并没有关系。
+	并且，多个过滤器的执行顺序跟xml文件中定义的先后关系有关。
+	对于多个拦截器它们之间的执行顺序跟在SpringMVC的配置文件中定义的先后顺序有关。
+	
+4、两者的本质区别：
+    拦截器（Interceptor）是基于Java的反射机制，而过滤器（Filter）是基于函数回调。
+	从灵活性上说拦截器功能更强大些，Filter能做的事情，都能做，而且可以在请求前，请求后执行，比较灵活。
+	Filter主要是针对URL地址做一个编码的事情、过滤掉没用的参数、安全校验（比较泛的，比如登录不登录之类），
+	太细的话，还是建议用interceptor。不过还是根据不同情况选择合适的。
+
+5、spring boot项目使用拦截器流程(Spring MVC中使用)
+   1>创建拦截器实现类，实现HandlerInterceptor接口，覆盖preHandle(执行方法前执行)和afterCompletion(执行方法后执行)方法
+     使用@Component注解修饰这个拦截器实现类，此注解作用把这个类注入到spring容器中。泛指各种组件，
+	 就是说当我们的类不属于各种归类的时候（不属于@Controller、@Services等的时候），我们就可以使用@Component来标注这个类。
+	 常用注解解释:
+		@controller 控制器（注入服务）:用于标注控制层，相当于struts中的action层
+		@service 服务（注入dao）:用于标注服务层，主要用来进行业务的逻辑处理
+		@repository（实现dao访问）:用于标注数据访问层，也可以说用于标注数据访问组件，即DAO组件.
+		@component把普通pojo实例化到spring容器中，相当于配置文件中的 <bean id="" class=""/>）
+	
+	2>创建WebMvc的配置实现类，实现接口WebMvcConfigurer，实现添加拦截器的方法addInterceptors，配置拦截规则
+		@Configuration//@Configuration标注在类上，相当于把该类作为spring的xml配置文件中的<beans>，作用为：配置spring容器(应用上下文)
+		public class NariInteceptorConfig implements WebMvcConfigurer {
+            //注入自定义实现的拦截器实例
+			@Autowired
+			private LoginCheckInterceptors loginCheckInterceptors;
+			//配置拦截路径
+			public void addInterceptors(InterceptorRegistry registry) {
+				//注册拦截器并配置拦截规则
+				registry.addInterceptor(loginCheckInterceptors)
+						.addPathPatterns("/**")
+						.excludePathPatterns("/login/login", "/login/linkedLogin","/login/sayHello"
+								,"/web/**","/homePage/queryCateCoverRate");
+			}
+		}
+       
+6、spring boot项目使用过滤器流程
+    1>创建自己的过滤器实现类实现Filter接口，实现doFilter方法，filterChain.doFilter(requestWrapper, response);//过滤器往下执行
+	2>配置过滤器，有如下方式:
+	    默认配置过滤器
+		    过滤所有请求，使用@component把该实现类注入spring容器即可
+	    通过注解方式配置过滤器
+		    在过滤器上添加WebFilter注解，如@WebFilter(filterName = "sessionFilter",urlPatterns = {"/*"})
+		    在启动类添加ServletComponentScan注解，如@SpringBootApplication@ServletComponentScan修饰启动器类
+		通过过滤器注册配置类使用过滤器
+		    @Configuration
+			public class WebComponent2Config {
+				@Bean
+				public FilterRegistrationBean someFilterRegistration1() {
+					//新建过滤器注册类
+					FilterRegistrationBean registration = new FilterRegistrationBean();
+					// 添加我们写好的过滤器
+					registration.setFilter( new SessionFilter());
+					// 设置过滤器的URL模式
+					registration.addUrlPatterns("/*");
+					return registration;
+				}
+			}
+
+
+
