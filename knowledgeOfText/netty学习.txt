@@ -1,0 +1,15 @@
+1、搭建一个netty服务器端和客户端流程
+	1>创建maven项目，pom文件添加netty-all的依赖，如下
+		<dependency>
+			<groupId>io.netty</groupId>
+			<artifactId>netty-all</artifactId>
+			<version>4.1.0.Final</version>
+		</dependency>
+		
+	2>创建服务器业务逻辑类EchoServerHandle继承自ChannelInboundHandlerAdapter
+	
+	3>创建服务器EchoServer类
+	
+	4>创建客户端业务逻辑类EchoClientHandler继承自SimpleChannelInboundHandler<T>
+	
+	5>创建客户端EchoClient类
