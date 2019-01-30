@@ -1,8 +1,13 @@
 package com.yjl.threadpool;
 
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ThreadPoolExecutor.AbortPolicy;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class ExecutorTest2 {
@@ -48,6 +53,7 @@ public class ExecutorTest2 {
     
     public void m3() {
     	ExecutorService pool = Executors.newFixedThreadPool(5);
+    	//ExecutorService pool = new ThreadPoolExecutor(2, 4, 0, TimeUnit.MILLISECONDS, new ArrayBlockingQueue(3),Executors.defaultThreadFactory(), new AbortPolicy());
     	for (int index = 0; index < loopNum; index++) { 
     		Runnable task = new Runnable() {
     			@Override
