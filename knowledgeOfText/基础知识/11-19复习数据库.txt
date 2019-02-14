@@ -1,0 +1,44 @@
+1、创建一个插入触发器
+create trigger chufaqi
+on t_student
+for insert
+as
+select * from t_score
+
+
+
+2、创建一个查询学生的名字，英语课程，成绩的视图
+create view myview
+as
+select name from t_student where stuid = 10
+union
+select coursename from t_course where stuid = 10
+union
+select score from t_score where stuid = 10
+go
+
+
+
+3、创建一个存储过程
+create proc cunchuguocheng
+as
+select * from t_student where age > 20
+go
+s
+4、创建索引
+select name.address from t_person where age > 20
+//为年龄创建索引
+create nonclustered index idx_age on t_person(age)
+//为name和address字段创建索引
+create nonclustered index idx_name_address on t_person(name,address)
+
+5、创建一个游标
+declare youbiao cursor
+dynamic
+for select * from t_student
+open youbiao
+fetch next from youbiao
+fetch last from youbiao
+close youbiao
+
+deallocate youbiao

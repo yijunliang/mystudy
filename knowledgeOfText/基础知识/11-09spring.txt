@@ -1,0 +1,120 @@
+1、框架的学习:
+
+   1>创建项目
+
+   2>导入jar文件
+ 
+   3>到示例项目中复制配置文件
+  
+   4>启动spring是在web.xml中使用监听器启动的
+
+2、什么是Spring?
+   spring是一个开源的控制反转(ioc)和面向切面(aop)的容器框架,目的简化企业开发
+
+
+3、什么是Ioc(控制反转)？
+   
+	一般思维是我们需要一个类的实例，就直接在类的内部new一个。如二期项目时，我们要调用dao接口中的方法，
+
+	必须要有一个dao的实现类的实例，这个实例是在Manage实现类中new出来的，然后就可以使用。而控制反转的意思
+
+	是我们需要一个类的实例的时候，不是在类的内部new的而是从外部容器取。即把控制权从内部类转移到外部容器(通过依赖注入实现)。
+
+4、依赖注入的意思是什么，如何实现？
+
+   依赖注入:所谓依赖注入就是指：在运行期，由外部容器动态地将依赖对象注入到组件中。
+
+   
+   实现:1>内部类中有需要的对象的定义，并提供get和set方法（一般开发常用）或者有带参数的构造中为对象赋值。
+        
+        2>在配置文件中配置（配置bean标签）。
+
+        3>解析配置文件得到一个BeanFactory的实例，调用方法为定义的对象赋值。
+
+
+5、使用spring的好处
+   1>降低组件之间的耦合度
+   2>spring容器提供了单例模式，不再需要开发人员手动编写
+   3>可以使用容器提供的众多服务，如事务
+   4>spring框架提供了aop技术
+   5>spring对其他主流框架可以很好的集成
+
+
+6、Spring的配置文件可以指定多个，可以通过String数组传入。
+
+7、从spring容器获取到bean对象的方法
+   1>解析spring配置文件，得到BeanFactory 对象
+     BeanFactory beanFactory = new ClassPathXmlApplicationContext("applicationContext.xml");
+   2>通过BeanFactory 对象获取到bean对象
+     TestService service = (TestService)beanFactory.getBean("testService");
+
+8、日期格式spring容器不能自动转换
+   要定义类型转换器,使类继承自PropertyEditorSupport
+
+
+9、spring aop的实现
+   1>jdk动态代理(目标类必须实现接口)
+   2>cglib动态代理(目标类不用实现接口)
+   3>代码方式实现aop一个例子
+   4>注解方式实现一个aop的例子，
+   5>AOP常用注解及作用:@Aspect、@Pointcut、@Before、@After、@Around
+
+
+10、spring整合Struts2和hibernate的步骤以及注意事项
+
+11、spring中公共属性的配置
+    <bean id="classB" class="com.ClassB" parent="classAbstact">
+    classAbstact配置的就是公共属性，如id,name等
+
+12、spring bean的范围
+    1>scope=“singleton“ 单例模式 默认
+    2>scope="prototype" 原型模式
+
+13>spring可以自动装配属性
+   1>按名字自动装配，在beans标签上加入default-autowire="byName“
+   2>按类型自动装配，在beans标签上加入default-autowire="byType“
+
+14>spring中aop的概念
+   1>熟记aop图
+
+   2>各名词的意义:
+     Aspect(切面、方面):
+     joinpoint(连接点):
+     Pointcut(切入点):
+     Advice(通知):
+     Target(目标对象):
+     Weave(织入):
+
+   3>注解实现aop，如:切入日志记录
+     导入相应jar包
+     1>目标类就是某个实现类，里面定义增删改查等方法
+     2>代理类，不用实现任何接口，要定义有和实现类一样的方法，并且有自己的方法(切入的方法)
+       使用如下注解:
+       @Aspect描述代理类
+
+       @Pointcut("execution(* add*(..)) || execution(* del*(..))")描述那个方法是要切入到的方法
+       比如说要在添加方法出切入写日志，就用这个注解描述添加方法
+
+
+       @Before("addMethod()")切入的方法在XX前或者后
+       比如要切入的是写日志就在，写日志的方法使用这个注解描述
+
+
+15、spring中的事务
+    1>Spring的事务传播是Spring特有的，不是对底层jdbc的代理。
+    2>REQUIRED:业务方法要在一个事务中运行
+    3>SUPPORTS:业务方法在某个事务范围内被调用，则方法成为该事务的一部分,否则就不使用事务
+    4>NOT_SUPPORTED:业务方法不需要事务
+    5>REQUIRESNEW:不管是否已经存在事务，业务方法总会为自己创建一个新的事务
+    6>MANDATORY:业务方法只能在以存在事务运行，不能自己发起事务
+    7>Never:业务方法绝对不能使用事务
+    8>事务一般配置到业务层就可以了，如果配置在dao层会过于细化。(业务层可能调用多个dao层)
+
+
+
+
+
+
+
+   
+

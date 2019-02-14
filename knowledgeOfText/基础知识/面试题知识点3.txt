@@ -1,0 +1,79 @@
+1、LinkedList、ArrayList和vector的区别
+
+  1>ArrayList、vector内置的是一个顺序表实现的数组，查找快增删慢
+
+  2>LinkedList内置的为一个双向链表实现的数组增删方便查找慢
+
+  3>ArrayList和vector初始有一定的容量，当超过这个初始容量时
+    ArrayList每次增加空间大小为原来的1.5倍(不可以自己设置增大的大小)
+    而vector每次增加空间为原来的两倍(可以自己设置增大的大小)
+
+  4>ArrayList和LinkedList是线程不安全的，vector是线程安全的
+
+
+2、HashMap、HashTable、TreeMap和WeakHashMap的区别
+
+   1>HashMap是Map接口的是实现类，根据键(hashCode得到的int型)存储值。具有很快的访问速度。
+     它的内部其实也是一个数组，只是把hashCode的值当做数组下标，因为每个不同对象的hashCode
+     返回的int是不一样的。而HashTable继承自Dictionary类
+   
+   2>HashMap是HashTable的轻量级实现(非线程安全的实现)，HashMap与HashTable最主要的区别是
+     HashMap允许空键值（只允许有一条）而HashTable不允许。
+
+   3>HashTable的方法是线程安全的，而HashMap是线程不安全的。
+
+   4>HashTable使用Enumeration，而HashMap使用Iterator。
+
+   5>HashTable中hash数组默认大小是11，增加方式为(原来空间大小*2+1)。
+     HashMap中hash数组默认大小是16，并且一定是2的指数。
+   
+   6>HashMap存的键值对取出来时是无序的，想要有序可以使用TreeMap。
+
+   7>LinkedHashMap是HashMap的一个子类，用于使输入时的键值对和输出时的键值对一致
+
+   8>WeakHashMap中的key采用的是弱引用的方式只要它的key不再被外部引用就可以被垃圾回收器回收
+     而HashMap中的key是采用强引用方式，只有当这个key从HashMap中被删除时才可以被垃圾回收器
+     回收，否则就算这个key没有被外部引用也不能回收
+   
+   9>在HashTable上下文中同步指的是什么？（面试题）
+     同步即在一个时间点中只能有一个线程可以修改hash表。任何线程要对HashTable进行更新
+     都首先要获取到它的对象锁，其他线程则等待锁的释放
+    
+   10>如何实现HashMap的同步？（面试题）
+     通过Map map = Collections.synchronizedMap(new HashMap());达到同步的效果。
+
+3、HashMap的工作原理（编程实现）
+  
+4、Collenction和Collections的区别
+   1>Collenction是一个集合接口。Collections是针对集合类的一个包装类提供了一系列静态方法
+     以对各种集合搜索、排序、线程安全化等操作。
+  
+5、什么是线程？它与进程的区别？为什么要使用线程？
+
+    1>线程是一个应用程序的不同执行路径。
+
+    2>进程是一段正在执行的程序
+
+    3>同一个进程中的各个线程共享程序的内存空间(代码段、数据段和堆空间)以及进程级资源（如打开的文件）
+   
+    4>使用多线程可以减少程序响应时间。与进程相比线程的创建以及切换开销更小。充分利用多cpu的性能
+      使用多线程可以简化程序结构，使程序便于理解与维护
+
+6、同步和异步的区别
+   1>同步使一个资源在某一个时刻只能被一个线程访问
+   1>同步相当于你叫我吃饭，如果我听到了就回答如果没听到你则一直叫直到我听到为止（等待响应）。
+   2>异步则是你叫我吃饭不管我听没听到，你就去吃饭了，我可能立马跟你去也可能等下班后再去（不必等待响应）
+ 
+7、如何实现Java多线程
+   1>实现Runable接口
+   2>继承自Thread类并覆盖Run()方法
+   3>实现Callable接口，重写call()方法。它提供了一个返回值，可以抛出异常
+
+8、run()与start()方法区别
+   1>run()只是方法的调用并不会启动线程
+   2>start()开启一个线程，但不是马上执行这个线程，只是让这个线程进入就绪状态，当cpu调度到它时
+     这个线程才真正执行，当run()执行完后线程就结束了。
+
+9、线程同步的实现方法有哪些
+   1>使用synchronized实现
+   2>lock()方法

@@ -1,0 +1,28 @@
+1、快速开启/关闭服务的方法
+   使用记事本编辑
+   sc start | stop 服务名字//开启或者关系服务
+   编写完要开启的服务后吧文件名该为.bat文件
+   然后以管理员身份运行即可
+
+2、什么是异常？
+   1>异常是程序在运行时发生的非正常情况或者错误
+   2>所有异常的父类是Throwable类
+   3>Throwable下有两大类分别为:
+     Error类:程序的错误，不可恢复，一旦发生程序就会退出。
+     Exception类:
+        RuntimeException:运行时异常，不必捕获，常见运行时异常
+                         NullPointException、ArrayIndexOutOfBoundsException
+                         ArithmeticException、ClassCaseException
+                         BufferOverflowException
+        注意:程序遇到运行时异常时，逐级往上抛，直到遇到处理它的代码为止。
+             如果没有处理块则会抛到最上层，如果是单线程就用main抛出
+             多线程用Thread.run()方法抛出。如果是线程，抛出之后，线程就退出了。
+             如果是主程序抛出的异常，那么整个程序也就退出了。
+
+        CheckedException:检测异常，一定要捕获
+
+
+3、float f = 3.4;是否正确?
+   结果不正确，精度不准确,应该用强制类型转换，
+   如下所示：float f=(float)3.4 或float f = 3.4f 在java里面， 
+   没小数点的默认是int,有小数点的默认是double;

@@ -1,0 +1,112 @@
+1、创建线程的方式有多少种
+   1>继承自Thread类，重写run方法
+   2>实现Runnable接口，重写run方法
+   3>实现Callable接口,重写call方法
+    （可以在任务结束后提供返回一个值
+      call方法可以抛出异常，run方法不能
+      运行Callable可以拿到一个Future对象）
+
+
+2、线程的状态，初始化、就绪、运行、阻塞、结束
+   线程start之后不是马上进入执行状态，而是进入就绪状态等待cpu调度
+
+
+3、什么是线程
+   线程是能够执行程序代码的一个执行单元。
+   
+
+4、多线程的好处
+   1>减少程序响应时间
+   2>线程的创建以及切换消耗的系统资源比进程小
+   3>简化程序结构，是程序便于理解与维护
+   4>计算机本身就具有执行多线程的能力，如果只使用单线程是很大的浪费
+
+
+5、同步和异步的区别
+   同步:当请求处理某件事时，必须要等待返回结果，才能继续执行下一步操作。
+   异步:请求某件事时，不必等待返回结果，就可以继续执行别的操作。
+
+
+6、实现多线程同步的方法有哪些
+   1>使用synchronized关键字（synchronized块，synchronized方法）
+   2>wait()、notify()，一定要在synchronized块或方法中
+   3>Lock接口，实现类ReentrantLock主要方法
+     lock()以阻塞的方式获取锁
+     tryLock()以非阻塞的方式获取锁
+     lockInterruptibly()如果获取了锁就立即返回，否则处于休眠状态直到获取到锁，如果被中断会收到中断异常
+   4>设置标志，线程访问，查看标志如果是为假即证名没有别的线程在访问那么就访问，把标志改为真，访问结束
+     再把标志改回为假。
+
+
+7、sleep()和wait()方法的区别
+   1>sleep不会释放对象锁，而wait会释放对象锁
+   2>sleep是Thread类的静态方法，而wait是Object类的方法
+   3>sleep可以在任何地方使用，而wait只能在同步块或同步方法中使用
+   4>sleep必须捕获异常，而wait不用捕获异常
+
+
+8、什么是守护线程，特点
+   1>守护线程是程序在运行时在后台提供一种通用服务的线程
+   2>如果没有任何用户线程在执行，程序就结束了（即使有守护线程）
+     换言之只要有任何非守护线程存在程序就不会结束
+   3>创建守护线程的方式在线程start之前t1.setDaemom(true);
+
+9、join方法的作用
+   1>将两个线程合并，用于实现同步功能。
+   2>a.join()就是把a线程加入到正在执行线程中去，正在执行的线程等待a线程的执行结束再继续执行。
+
+
+
+10、死锁的编程实现
+
+package com.yjl.deadlock;
+//死锁的演示
+public class DeadLock extends Thread {
+	//a资源
+	private int a = 1;
+	private static Object o1 = new Object();
+	private static Object o2 = new Object();
+	public void run() {
+		System.out.println("a=" + a);
+	    if(a == 1) {
+	    	synchronized(o1) {
+	    		try {
+	    			System.out.println("拿到了o1资源");
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    		synchronized(o2) {
+	    			System.out.println("拿到了o1资源也拿到了o2资源");
+	    		}
+	    	}
+	    }
+	    if(a == 0) {
+	    	synchronized(o2) {
+	    		try {
+	    			System.out.println("拿到了o2资源");
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	    		synchronized(o1) {
+	    			System.out.println("拿到了o2资源也拿到了o1资源");
+	    		}
+	    	}
+	    }
+	}
+	
+	public static void main(String[] args) {
+		DeadLock deadLock1 = new DeadLock();
+		DeadLock deadLock2 = new DeadLock();
+		deadLock1.a = 1;
+		deadLock2.a = 0;
+		deadLock1.start();
+		deadLock2.start();
+	}
+}
+
+
+11、生产者消费者的编程实现

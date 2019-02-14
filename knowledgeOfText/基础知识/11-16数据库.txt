@@ -1,0 +1,291 @@
+1、常用子查询
+   1>变量子查询
+     declare @age int
+     selecte @age=stuage frome t_student where name="张三"
+     select * from t_student where stuage > @age
+     go
+
+   2>直接子查询
+     select * from t_student where stuage > (select stuage from t_student where name = "李四")
+
+   3>表联结可以使用子查询替换
+     select * from t_student d inner join t_score s on d.scoreId = s.scoreId where score = 60
+     
+     select * from t_student where scoreId = (select scoreId from t_score where score = 60)
+  
+   4>in子查询（用于检测某列的值是否在某个范围）
+     select name from t_student where score in (select score from t_score)
+
+   5>not in子查询
+     select name from t_student where scor not in (select scord from t_score)
+
+   6>exists子查询(存在王五这个人为真)
+     if exists(select * form t_student where name = "王五")
+     sql语句
+   7>not exists子查询(不存在王五这个人，为真)
+     if not exists(select * from t_student where name = "王五")
+     sql语句
+   
+
+2、什么是事务
+   1>事务是一个不可分割的逻辑工作单元，处于同一个事务中的sql操作
+     要么都成功执行，要么都不执行
+   2>事务具有的属性
+     原子性
+     一致性
+     隔离性
+     永久性
+   3>创建事务的方法
+     开始事务:begin transaction
+     回滚事务:rollback transaction
+     提交事务:commit transaction
+
+3、什么是索引
+   索引是一种与表有关的数据库结构，它可以使对应于表的SQL语句执行得更快。
+   索引的作用相当于图书的目录，可以根据目录中的页码快速找到所需的内容。
+
+4、索引的分类
+   1>唯一索引:
+   2>主键索引:
+   3>聚集索引:
+   4>非聚集索引:
+
+
+5、创建索引的方法
+   1>现在有一个需求，查询2006年7月1日到2007年7月31日的所有订单，
+     并按requireddate字段排序，查询sql代码如下：
+     select id,name,person from sales where createdate >= '20060701' and createdate < '20070731'
+     order by requireddate
+   2>为requireddate字段建立索引
+     create nonclustered index idx_nc_requireddate on sales(requireddate)
+     idx_nc_requireddate 为建立的索引名字
+   3>为createdate字段建立索引
+     create nonclustered index idx_nc_createdate on sales(createdate)
+   4>针对id,name,person这几个字段建立组合索引
+     create nonclustered index idx_id_name_person on sales(id,name,person)
+   说明:创建完索引之后，数据查询的效率提高了
+
+
+6、什么是视图？
+   1>视图就是将你需要的几张表中的数据整合到一张表(虚表)上面
+
+7、创建视图
+   1>建立显示大于20岁的学生学号、姓名、性别等信息的视图s_view
+     create view s_view
+     as
+     select stuno,stuname,sex
+     from t_student
+     where age > 20
+     创建完视图之后，select * from s_view查到的就是全部的大于20岁的学生的信息
+   2>创建信息系学生视图
+     create view xinxi_student_view
+     as 
+     select * from t_student
+     where dept = 'xinxi'
+   3>从多个表中拿数据建立视图，学生表的名字，课程表的课程，成绩表的成绩
+     create view s_c_sc_view
+     as
+     select s.name,c.name,sc.score
+     form t_student as s,t_course as c,t_score as sc
+     where s.stuid = sc.stuid and s.courseid = c.courseid
+     这个视图中的数据是:学生名字，课程名，成绩
+
+8、删除视图
+   drop view 视图名字
+
+
+9、存储过程
+   1>存储过程就是把完成某功能的一系列sql语句放在一起用一个名字命名
+     当需要使用某功能时可以:exec 存储过程名,而不用再写sql语句
+     也就是相当于完成某功能的函数，要完成功能直接调用函数就行了
+
+   2>怎样创建存储过程？
+     create proc[参数(可有可无)] 存储过程名
+     @参数1  数据类型 = 默认值 OUTPUT,
+              …… ,
+     @参数n  数据类型 = 默认值 OUTPUT
+     as
+     完成某功的的sql语句
+     go
+
+     例子:创建一个查询学生表中年龄大于20岁的学生的名字（不带参数）
+     create proc studentage
+     as
+     select name from t_student where age > 20
+     go
+     说明:以后要是想查大于20岁的学生，那么只要:exec studentage即可
+
+     例子:创建一个查询学生表中年龄大于X岁的学生的名字（带参数）
+     create proc studentage
+     @stuage int
+     as
+     select name from t_student where age > stuage
+     go
+     调用:exec studentage 18 查询大于18岁的学生
+
+
+   3>java中调用存储过程
+    //创建存储过程对象
+    CallableStatement c=conn.prepareCall("{call getsum(?,?)}");
+    //给存储过程的第一个参数设置值
+    c.setInt(1,100);   
+    //注册存储过程的第二个参数
+    c.registerOutParameter(2,java.sql.Types.INTEGER);
+    //执行存储过程
+    c.execute();
+
+   4>paiserror（"错误信息"）向用户报告错误
+
+
+10、什么是触发器？
+    1>触发器是一种特殊的存储过程，在对表或视图发出 UPDATE、INSERT 或 DELETE 语句时自动执行。
+      不能像存储过程那样调用执行。
+
+    2>触发器的主要作用就是其能够实现由主键和外键所不能保证的复杂的参照完整性和数据的一致性。
+
+    3>触发器的分类:
+      after 触发器:要求只有执行某一操作（INSERT UPDATE DELETE）之后，
+                   触发器才被触发，且只能在表上定义
+
+      instead of 触发器:并不执行其所定义的操作（INSERT、 UPDATE、 DELETE），
+                        而仅是执行触发器本身.既可在表上定义INSTEAD OF 触发器，
+                        也可以在视图上定义INSTEAD OF 触发器，
+                        但对同一操作只能定义一个INSTEAD OF触发器
+
+
+11、创建触发器
+-- 判断名为 trigger_Stu_Insert 的触发器是否存在
+if(OBJECT_ID('trigger_Stu_Insert') is not null)
+-- 删除触发器
+drop trigger trigger_Stu_Insert       
+go
+create trigger trigger_Stu_Insert
+on Student        -- 指定创建触发器的表
+for insert        -- insert 触发器，也可以写为 after insert
+as
+paiserror('you have no right to delete the record',10,1)
+这个例子是：当 Student 表新增一条数据时，触发器被触发
+
+create trigger teacher_trigger2
+on teacher_info
+instead of delete
+as
+paiserror('you have no right to delete the record',10,1)
+这个例子是：当执行delete操作时触发器触发,且要求触发触发器的delete语句在执行后被取消
+
+
+12、删除触发器
+    DROP TRIGGER 触发器名字
+
+
+13、禁止和启用触发器的语法格式如下:
+    alter table 触发器表名称
+    {enable|disable} trigger
+    {all|触发器名[,...n]}
+
+如alter table t_student
+  disable trigger chufaqi
+  在学生表上禁用名字为chufaqi的触发器
+
+
+14、触发器练习
+  在数据库student中的stud_info上建立delete触发器a,使得在删除表stud_info中记录的同时,自动检查    stud_grade表中是否有该学生的记录,如果存在该学生的记录,则同时删除.
+ 
+  答案:create trigger a
+       on stud_info
+       for delete
+       as
+       delete stud_grade
+       form stud_grade grade , deleted d
+       where grade.studentId = d.studentId
+
+
+   当更新学生表学号的时候，成绩表中的相应的学生的记录跟着改变
+  
+   create trigger updateStudent
+   on t_student
+   for update
+   as
+   if update(studentId)
+   begin
+   udate t_score set studentId = i.studentId 
+   from t_score score,deleted d, inserted i //deleted 和 inserted 是虚表
+   where score.studentId  = d.studentId //更新操作是删除旧的记录，插入新的记录
+   end 
+       
+
+
+15、什么是游标？
+    游标是一种能从包括多条数据记录的结果集中每次提取一条记录的机制。
+
+
+16、游标的分类
+    Transact_SQL 游标:主要用在T-SQL脚本、存储过程、触发器等
+    API游标:主要用在服务器
+    客户端游标:客户机上缓存结果集时使用
+
+17、游标的创建以及使用
+    --创建一个游标
+    declare 游标名 cursor
+      类型(static/dynamic)
+    for select * from t_student
+    --打开游标
+    open 游标名
+    --提取游标
+    fetch next from 游标名
+    --关闭游标
+    close 游标名
+    --删除游标
+    deallocate 游标名
+
+使用游标的例子
+/*游标使用例子*/  
+--声明2个变量  
+DECLARE @D_Id NVARCHAR(MAX);     
+DECLARE @D_Name NVARCHAR(MAX);   
+DECLARE @D_Password NVARCHAR(MAX);     
+--声明一个游标mycursor，select语句中参数的个数必须要和从游标取出的变量名相同    
+DECLARE mycursor CURSOR  
+FOR  
+    SELECT  D_Id ,  
+            D_Name,  
+            D_Password  
+    FROM    dbo.TestTable;      
+--打开游标    
+OPEN mycursor;        
+--从游标里取出数据赋值到我们刚才声明的2个变量中    
+FETCH NEXT FROM mycursor INTO @D_Id, @D_Name, @D_Password;        
+--判断游标的状态    
+-- 0 fetch语句成功        
+---1 fetch语句失败或此行不在结果集中        
+---2 被提取的行不存在    
+WHILE ( @@fetch_status = 0 )  
+    BEGIN        
+        --显示出我们每次用游标取出的值     
+        print (@D_Id+'--------'+@D_Name+'--------'+@D_Password)       
+        --用游标去取下一条记录    
+        FETCH NEXT FROM mycursor INTO @D_Id, @D_Name, @D_Password;    
+    END;    
+--关闭游标    
+CLOSE mycursor;    
+--撤销游标    
+DEALLOCATE mycursor;
+
+18、游标记录提取方法
+    fetch first：提取游标的第一行。
+
+    fetch next：提取上次提取的行的下一行。
+
+    fetch prior：提取上次提取的行的前一行。
+
+    fetch last：提取游标中的最后一行。
+  
+    fetch absolute n
+    如果n 为正整数，则提取游标中的第n行
+    如果n为负整数，则提取游标最后一行之前的第n行（从后取）
+    如果n 为0，则不提取任何行
+
+
+    
+
+      

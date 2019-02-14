@@ -1,0 +1,90 @@
+1、集合和数组的区别
+   数组:长度固定，不适合在元素数量未知的情况下使用，
+        无法判断数组中实际有多少元素，length只是告诉数组的容量。
+   集合:长度可变，只能存储对象，可以在对象数量未知时使用。
+
+
+2、Collection接口是（List、Set和Queue）的根接口
+   List接口(有序可重复):实现类有
+		ArrayList:	
+			1>以Object数组实现，默认大小是10
+			2>查询快，增删慢
+			3>有初始容量为10，容量不够时增长为原来的1.5倍(oldCapacity + (oldCapacity >> 1))
+			  每次容量增长伴随着数组复制(Arrays.copyOf(elementData, newCapacity)),设置合适的
+			  初始容量可以避免数组复制
+			4>不能设置增长容量
+			5>非线程安全
+		LinkedList:
+			1>用双向链表实现
+			2>查询慢，增删快
+			3>非线程安全
+		Vector:
+			1>以Object数组实现
+			2>查询快，增删慢
+			3>有初始容量，容量不够时增长为原来的2倍
+			4>可以设置增长容量
+			5>线程安全
+			       
+		        
+
+   Set接口(无序不可重复):实现类有
+		AbstractSet
+		ConcurrentSkipListSet
+		CopyOnWriteArraySet
+		JobStateReasons
+		EnumSet
+		LinkedHashSet:
+			1>根据存入元素的hashCode值决定元素存储位置
+			2>使用链表维护元素的次序，即会以添加时的顺序访问元素
+
+
+		HashSet（继承自AbstractSet实现Set、Cloneable、Serializable）:
+			1>存入HashSet的对象要重写equals()和hashCode()以确保Set中没有存储相同的对象。
+			2>HashSet的底层是由哈希表即HashMap支持
+			3>元素可以是null但是只能有一个null元素
+			4>根据存入元素的hashCode值决定元素存储位置
+		TreeSet:
+			1>存储对象的时候可以排序，默认是自然排序如要定制排序需要指定排序的算法
+			  (对象类必须实现Comparable接口重写compareTo()方法)
+			2>底层是由TreeMap支持的
+                         
+3、Map接口是util包下的独立于Collection接口的，实现类有:
+		HashMap:
+			1>允许null为键以及null为值但是只允许一条
+			2>有containsvalue、containskey方法
+			3>使用Iterator
+			4>hash数组的默认大小是16，一定是2的指数，当容量达到数组大小*0.75(默认加载因子)时，数组会增长(避免数组增长需要设置合适的初始大小)。
+			5>非线程安全
+			6>它的key是用强引用方式，即使key没有被外部引用要把key从HashMap中移除，才能被垃圾回收器回收
+			7>实现线程安全Map map = Collections.synchronizedMap(new HashMap());
+			
+		HashMap原理:
+		    以数组+链表的方式实现，put一对键值数据时，对key进行哈希得到哈希值(hash(key))，
+			                                         不存在,把该键值对存入此位置
+			查看对应哈希值下标的数组中是否存在数据-->                                              不存在，在此链表的头部加入键值对
+                                                     存在，遍历该位置上的链表，是否存在对应的key-->
+													                                               存在，替换对应的key的值
+		    说明:1.8在头部加，1.7在尾部加;1.8当链表节点大于7时链表将变为自平衡二叉树;1.8为Node数组，1.7为Entry数组。
+			
+		HashTable(同时继承Dictionary类):
+			1>不允许null键值
+			2>有contains方法
+			3>使用Enumeration
+			4>hash数组的默认大小是11，每次增加为old*2+1
+			5>线程安全
+
+		TreeMap:
+			1>能够把保存的元素根据键排序，取出来的是排序的键值对
+			2>默认是自然排序，也可以自定义排序
+
+		WeakHashMap:
+			1>它的key是弱引用，只要key不再被外部引用，就可以被垃圾回收器回收
+			
+集合中是线程安全的有:
+HashTable
+Vector
+Statck
+Enumeration
+除了这些其他的类和接口都是非线程安全的
+
+               

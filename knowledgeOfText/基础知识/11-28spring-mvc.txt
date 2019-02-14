@@ -1,0 +1,258 @@
+spring MVC大纲:
+
+Spring MVC是什么?
+1>Spring MVC是基于MVC的web应用层框架，它接收并处理用户的请求。降低系统各层之间的耦合度。
+
+Spring MVC与Struts2的区别?
+1>Spring MVC是单例的,Struts2是多例的
+2>Spring MVC是用servlet充当控制器，而Struts2是使用过滤器，所以性能上spring mvc比Struts2高
+
+Spring MVC核心组件?
+1>中央控制器
+2>映射处理器
+3>控制器
+4>ModelAndView(封装结果数据和视图的类)
+5>视图解析器
+
+Spring MVC请求处理流程?
+Spring MVC的类型转换？
+Spring MVC的配置文件要配置什么东西？
+Spring MVC的请求转发和重定向？
+Struts2的请求转发和重定向？
+Spring MVC的拦截器？
+Spring MVC的数据校验？
+Spring MVC的异常处理？
+Spring MVC的文件上传?
+
+
+
+
+
+
+1、MVC的请求步骤
+   1>用户发起Request请求-->控制器
+   2>控制器接收到请求-->模型(业务逻辑(pojo,service,dao三层))处理业务数据，得到结果
+   3>模型把处理结果-->控制器
+   4>控制器接收到模型返回的结果-->视图(展示结果数据)
+   5>控制器把结果视图response-->用户
+
+
+2、Struts2的请求步骤
+   1>用户发起请求，请求被服务器（Tomcat等）接收到，服务器选择处理请求的web应用(工程)
+   2>web容器读取工程中的web.xml文件，发现由Struts2的过滤器来处理该请求
+     根据filter的配置找到FilterDispatcher(Struts2的控制中心)，
+     反射得到FilterDispatcher的实例,然后回调doFilter方法进行真正的处理
+   3>FilterDispatcher将请求转发给ActionMapper(判断这个请求是否被Struts2处理)
+   4>需要被Struts2处理，ActionMapper通知FilterDispatcher。
+     FilterDispatcher停止过滤器链以后的部分，然后建立ActionProxy实例
+   
+
+
+3、Spring MVC的请求步骤
+   1>请求 --> DispathServlet(中央控制器web.xml中配置)
+   2>DispathServlet --> HandlerMapping(映射处理器，决定把请求交给那个控制器
+                                       在XX-servlet.xml中配置，XX为web.xml中
+                                       的servlet的名字)
+   3>HandlerMapping --> 处理请求的Controller(完成要做的事)
+   
+   4>Controller -- > ModelAndView(处理后的结果的封装类)
+
+   5>ModelAndView --> ViewResolver (ViewResolver解析返回的封装类，调用页面展示结果给用户)
+
+   6>ViewResolver --> jsp
+
+   第一个spring mvc例子:
+   1、使用eclipse创建Web工程
+   2、导入spring mvc需要的jar包
+   3、在web.xml中配置servlet(中央控制器DispathServlet)
+   4、创建控制器类实现controller接口,这个类中的方法实现要做的事情
+   5、在Web-Inf下创建spring mvc 配置文件(复制)这个文件的名字为XX-servlet.xml
+      XX为web.xml中的中央控制器servlet的名字
+   6、把控制器类纳入spring容器
+   7、配置映射处理器类HandlerMapping（决定请求交个那各控制器）
+   8、配置视图解析器类ViewResolver
+   第二个例子(把参数封装到实体bean中)
+   1、创建实体类
+   2、创建的控制器类继承自AbstractCommandController
+   3、配置控制器类的时候指明实体类
+   4、其他的配置和一一样
+   第三个例子（为实体类添加一个日期属性，发现日期属性不能注入值）
+   1>为控制器类覆盖一个转换器方法
+   2>如需要自定义的转换器，则new自己的转换器即可
+   第四个例子，如果有组属性即用户属于某个组该怎么配置，即引用属性的配置
+   1>页面中name"group.name"
+   第五个例子为项目添加字符编码过滤器
+   1>创建filter类实现filter接口
+   2>web.xml中配filter
+   第六个例子，一个控制器中完成多个业务方法
+   1>控制器类继承自MultiActionController,里面写业务方法(增删改查等)
+   2>把控制器类纳入容器的时候这样配置
+     <bean id="loginController" class="com.yjl.springmvc.controller.UserController">
+		<property name="methodNameResolver">
+			<bean
+				class="org.springframework.web.servlet.mvc.multiaction.ParameterMethodNameResolver">
+				<property name="paramName" value="cmd"></property>
+			</bean>
+		</property>
+	</bean>
+    3>在页面的表单要隐藏一个文本域，名字为cmd（控制器中配的）值为业务方法
+    
+4、spring mvc使用注解方式（重要，开发常用）
+   1>spring 配置文件中配置注解驱动:<mvc:annotation-driven/>
+     spring 配置文件中配置组件扫描包位置:<context:component-scan base-package="com.xunpoit.spring.controller"/>
+     spring 配置文件中配置视图解析器:
+     <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/"/>
+        <property name="suffix" value=".jsp"/>
+     </bean>
+
+   2>以注解的方式开发控制类
+
+
+
+5、使用eclipse创建web项目的时候可能会报没有找到servlet类的错误
+   这是没有导入servlet的jar包导致的，要把Tomcat中的lib下的servlet jar包导入到项目中
+
+
+6、eclipse中的jsp页面报错可能是缺少service runtime Library
+   解决build path --> add Library --> Service Runtime -->finnish
+
+7、使用eclipse + maven创建web项目能遇到的问题
+   1>需要把jre换成jdk
+   2>添加tomcat到项目中，不然页面会报错
+   3>web.xml的头的版本低于2.3默认是不使用el表达式的，高于2.4默认使用el
+   4>使用模型驱动的方法接收参数有错误，这是为什么？？？？
+
+8、可以用数组接收表单中同name传递的参数如:
+   <input type="checkbox" name="ids" value="c">c
+   <input type="checkbox" name="ids" value="c++">c++
+   <input type="checkbox" name="ids" value="java">java
+   <input type="checkbox" name="ids" value="c#">c#
+   控制器接收:String[] ids
+
+9、常用的注解的意思:
+   1>@RequestParam(value="test",defaultValue="无名氏",required=false) String userName
+     用于修饰参数userName，表示页面中没有名字为test的标签的时候使用默认值"无名氏"
+     页面中的userName 等价于 页面中的test
+     required=true表示如果页面中没有test标签并且也没有为他设置默认值得时候会报错(必填)
+     
+10、请求转发:return "forward:/login.jsp";
+    重定向:return "redirect:/login.jsp";  
+
+
+11、spring mvc拦截器
+    1>创建类实现HandlerInterceptor接口
+
+    2>在spring mvc核心配置文件中配置拦截器
+      <mvc:interceptors>
+        <mvc:interceptor>
+            <!--拦截路径 -->
+            <mvc:mapping path="/*.action"/>
+            <mvc:mapping path="/*/*.action"/>
+            <!--使用哪个拦截器(说明:在前面的拦截器先调用) -->
+            <bean class="com.yjl.springmvc.interceptor.MyInterceptor"></bean>
+        </mvc:interceptor>
+        
+        <mvc:interceptor>
+            <mvc:mapping path="/*.action"/>
+            <mvc:mapping path="/*/*.action"/>
+            <!--指定不拦截哪个请求 -->
+            <mvc:exclude-mapping path="/user/login.action"/>
+            <bean class="com.yjl.springmvc.interceptor.LoginInterceptor"></bean>
+        </mvc:interceptor>
+      </mvc:interceptors>
+
+    3>参数说明:
+      preHandle：预处理回调方法，实现处理器的预处理（如登录检查），第三个参数为响应的处理器
+                （如我们上一章的Controller实现）；
+                 返回值：true表示继续流程（如调用下一个拦截器或处理器）；
+                         false表示流程中断（如登录检查失败），不会继续调用其他的拦截器或处理器，
+                         此时我们需要通过response来产生响应；
+
+      postHandle：后处理回调方法，实现处理器的后处理（但在渲染视图之前），
+                  此时我们可以通过modelAndView（模型和视图对象）对模型数据进行处理或对视图进行处理，
+                  modelAndView也可能为null。
+
+      afterCompletion：整个请求处理完毕回调方法，即在视图渲染完毕时回调，
+                       如性能监控中我们可以在此记录结束时间并输出消耗时间，
+                       还可以进行一些资源清理，类似于try-catch-finally中的finally，
+                       但仅调用处理器执行链中preHandle返回true的拦截器的afterCompletion。
+
+
+12、表单参数和控制器里面的接收参数不一致会报语法错误
+    可以确定为提交的表单数据和目标方法的入参不一致所导致，表单数据可以多于目标入参个数，
+    但目标参数没有被赋值，则会出现该异常，如下情况：
+
+
+
+
+
+13、spring mvc 的数据验证:使用Hibernate Validator验证框架用注解的方式实现
+
+    1>在pom文件添加依赖包
+      <dependency>
+       <groupId>org.hibernate.validator</groupId>
+       <artifactId>hibernate-validator</artifactId>
+       <version>6.0.2.Final</version>
+      </dependency>
+    2>在spring mvc核心配置文件中配置验证器bean
+    3>注册mvc的验证注解驱动
+    4>在实体类中就是使用注解来验证了，常见注解
+      @NotEmpty(message = "用户名不能为空")
+      @Size(min = 6, max = 12, message = "密码不能小于六位大于12位")
+      @Min(value = 0, message = "年龄不能小于0")
+      @Max(value = 120, message = "年龄不能大于120")
+      @Pattern(regexp = "^1[3,4,5,6,7,8]\\d{9}$",message="手机号码格式错误")
+    5>在控制器类中对要验证的参数使用@Validated注解，并提供BindingResult br参数
+      当表单提交时，如果不符合的验证数据存放在BindingResult中
+      int count = br.getErrorCount();//大于0验证不通过
+      FieldError userNameError = br.getFieldError("userName");//获取错误信息
+
+
+14、spring mvc配置全局错误信息
+    1>在spring mvc核心配置文件中配置异常映射bean
+    2>编写错误页面
+    3>测试，控制器类中制造错误
+    4>自定义异常处理
+      1、创建类A继承RuntimeException然后source -- > generate Constructors from supperClass
+      2、创建具体错误类B继承自A然后source -- > generate Constructors from supperClass
+      3、配置spring mvc核心配置文件中的异常映射bean
+      4、控制器类请求方法做逻辑判断，决定抛出那个自定义的异常
+    5>注解的方式配置异常
+      1、去掉spring mvc核心配置文件中的异常映射bean
+      2、控制器类请求方法做逻辑判断，决定抛出那个自定义的异常
+      3、在控制器类创建一个处理请求方法出现异常的方法，使用@ExceptionHandler修饰
+         这个方法的参数为Exception ex,通过判断ex是否属于自定义异常(instanceof)而决定页面要跳转到那里
+
+
+15、spring mvc的文件上传功能
+    1>导入jar包
+    2>spring mvc核心文件中配置文件上传相关的bean
+    3>表单加上enctype="multipart/form-data"属性
+    4>控制器类中使用MultipartFile picture接收表单传过来的文件
+    5>获取文件名字picture.getOriginalFilename();
+    6>创建文件File myFile = new File(realPath + "/" + originalFilename);
+    7>把文件写入指定路径picture.transferTo(myFile);
+
+
+16、spring 和 spring mvc的整合
+    1>导入spring jar包
+    2>在web.xml文件中配置启动spring的监听器
+    3>导入spring的配置文件(注意路径的编写)
+    4>在spring配置文件中配置<context:component-scan base-package="com.yjl.springmvc.manager.impl" />
+      用于自动扫描com.yjl.springmvc.manager.impl包下的实现类
+    5>实现类使用@Service("userManager")修饰
+      说明:service参数理论上可以随便设置，因为这是你要实现的类的一个对象名而已，
+           比如在一个Student实现类上加上@Service("student")，
+           括号里面就是给实例化后的Student对象取个名字。。。
+           这是在你一个接口有多个实现类的情况下区分实现类的方式。。。。
+           比如Student实现了Person接口，在你的controller里面@Autowired Person时，
+           假如这时Person还有另一个实现类User，为了确定实例化Student还是User，
+           艾特+Service括号里面的东西就有用了，
+           艾特+Autowired
+           艾特+Qualifier("student")
+           private Person person;
+           这样就确定实例化了一个Person指向一个Student对象。。。
+    6>使用 @Autowired
+           private UserManager userManager;
+      修饰控制器类中的接口(自动为该接口装配实现类实例)

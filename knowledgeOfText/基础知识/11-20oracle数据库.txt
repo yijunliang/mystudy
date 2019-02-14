@@ -1,0 +1,425 @@
+1、下载的两个文件都要解压在同一文件夹下
+
+
+2、出现先决条件检测失败点全部忽略即可
+
+
+3、口令需要填写(密码)，tiger
+
+
+4、用户分类
+   1>sys用户权限比system用户高，使用时要指定sysdba或者sysoper
+
+   2>system系统用户
+
+   3>sysman
+
+   4>scott普通用户默认密码tiger
+
+
+5、需要掌握的常用命令
+   1>登录oracle数据库:用户类型/密码
+     以sys用户登录:sys/tiger as sysdba
+
+   2>显示当前登录用户:show user
+
+   3>scott用户默认是锁定的，想要使用需要解锁，命令:
+     alter user scott account unlock;
+
+   4>清除屏幕命令:host cls
+
+
+6、oracle重要概念
+   1>表空间是oracle数据库的逻辑存储空间，oracle数据库可以有多个表空间。
+
+   2>Oracle数据库中至少存在一个表空间即SYSTEM表空间，表空间就相当于myql中的数据库
+     存放表、视图等。
+
+   3>一个表空间中可以有多个数据文件即XX.dbf文件，而表等时存放在XX.dbf文件中的
+
+   4>表空间的分类:
+     永久表空间:存放表、视图、存储过程等
+     临时表空间:数据库临时执行内容
+     undo表空间:事务提交前的修改数据
+     默认表空间:用户登录后会有自己的默认的表空间，创建表等是保存到默认表空间中的。
+                修改默认表空间命令:alter user 用户名 default tablespace 表空间名
+                注意:普通用户没有修改默认表空间的权限
+
+     创建表空间:create tablespace 表空间名字 tempfile|datafile 'XX.dbf' size 10M
+                tempfile是创建临时表空间
+                datafile是创建永久表空间
+                普通用户没有权限创建表空间
+
+     查看表空间位置:desc dba_data_files 查看永久表空间有哪些字段
+                    查找需要的字段
+                    select file_name,tablespace_name from desc dba_data_files where 
+                    tablespace_name = '表空间名字，大写'
+
+     查看用户是属于哪个表空间:
+     select username,default_tablespace from dba_users where username='SCOTT';
+
+     改变用户的表空间:
+     alter user scott default tablespace MY_SPACE;
+     
+     查看总共有哪些表空间:
+     select tablespace_name from dba_tablespace;
+ 
+ 
+
+7、应该先创建表空间，然后建立用户并为用户指定默认表空间
+
+8、数据字典表
+   1>dba_users保存了dba相关信息
+   2>user_users保存了用户相关信息
+
+9、使表空间脱机就是使它临时不可用，但是其他的表空间是可以继续工作的。
+   1>使指定表空间脱机
+     alter tablespace my_space1 offline
+
+   2>使表空间联机
+     alter tablespace my_space1 online
+
+   3>查看表空间的状态
+     select status from dba_tablespaces where tablespace_name='MY_SPACE1';
+
+10、修改表空间的读写状态
+    1>使该表空间只读
+      alter tablespace my_space1 read only;
+
+    2>使该表空间可读可写
+      alter tablespace my_space1 read write;
+
+11、修改表空间数据文件
+    1>向指定表空间添加数据文件
+      alter tablespace my_space1 add datafile 'my1.dbf' size 10M;
+
+    2>查看指定表空间的数据文件
+      select file_name from dba_data_files where tablespace_name = 'MY_SPACE1';
+
+    3>删除表空间的数据文件，但是一个表空间至少要有一个数据文件
+      alter tablespace my_space1 drop datafile 'my1.dbf';
+
+    4>删除表空间(including contents表示把表空间数据文件一起删除)
+      drop tablespace my_space1 including contents; 
+
+
+12、对表的操作
+    1>Oracle的数据类型有:
+      char(n)最多2000字符
+      nchar(n)最多1000字符一般保存汉字，uncode保存数据
+      varchar(n)最多4000
+      nvarchar(n)最多2000，存汉字
+      number(p.s)保存数值型，p为有效数字，s为小数，如numper(6.2)为1234.56
+      float(n)存储的数据要经过计算才能得到十进制，所以一般不使用
+      date日期类型
+      timestamp时间戳
+      blob大对象，以二进制存储数据，最多4GB
+      clob大对象，以字符串存储数据，对多4GB
+
+    2>创建表
+      create table 表名(
+      字段名1 类型，
+      字段名2 类型
+      ...
+      )
+
+    3>查询一个用户下的所有表
+      普通用户:select table_name from user_tables;
+      系统用户:select table_name from dba_tables where owner='用户名';
+
+    4>为表添加一个字段
+      alter table t_user add address varchar(20);
+
+    5>修改表中某字段的数据类型
+      alter table t_user modify id varchar(10);
+
+    6>删除表中的某个字段
+      alter table t_user drop column tel;
+
+    7>修改表中某字段名称
+      alter table t_user rename column address to addr;
+
+    8>修改表的名字
+      rename t_user to t_person;
+
+    9>删除表
+      truncate table t_user;删除表中全部数据，比delete快
+      drop table t_user;删除整个表，连结构一个起删除
+   
+    10>向表中添加数据
+       insert into t_user(id,name,addr) values(1,'王五','恩施');
+
+    11>删除表中数据
+       delete from t_user where id = 1;
+
+    12>更新表中数据
+       update t_user set name = '赵六' where id = 1;
+
+    13>查询表中数据
+       select * from t_user;
+
+    14>创建表时复制数据
+       create table t_person as
+       select * from t_user;
+
+
+13、Oracle执行外部sql文件的方法
+    1>@文件名(完整路径)
+    2>可以把一些要执行的sql写到记事本中然后把扩展名改为.sql然后执行
+
+
+14、Oracle约束(约束可以确保表中数据的完整性)
+    1>约束的类型:
+      主键约束
+      外键约束
+      非空约束
+      唯一约束
+      检查约束
+
+    2>创建表时创建约束
+      主键约束:create table t_user(id number(6) primary key ...)
+
+      外键约束:create table t_user(... personId number(6) references t_person(id))
+               id要为t_person表的主键，并且personId类型要和id类型一致
+
+      非空约束:create table t_user(name varchar(20) not null ...)
+
+      唯一约束: create table t_user(... name varchar(20) unique)
+                表中的数据的用户名字是唯一的，即不能添加重复的名字
+
+      检查约束:create table t_user(...age number(2) check(age > 20))
+               年龄一定要大于20否则不能把数据添加到表中
+
+
+    3>表创建完成后添加约束
+      主键约束:alter table t_user add constraint PK_userId  primary key(id)
+      外键约束:alter table t_user add constraint FR_personId foreign key(personId) references t_person(id)
+      非空约束:alter table t_user modify name not null
+      唯一约束:alter table t_user add constraint UQ_name unique(name)
+      检查约束:alter table t_user add constraint CK_age check(age > 20)
+
+    4>删除约束
+      alter table t_student drop constraint 约束名
+
+
+15、光标
+    1>光标就是一个结果集(结果集是查询数据库后得到的数据集)，相当于游。
+      使用光标可以从查询数据库后返回的结果集中取数据
+      定义语法:cursor 光标名 is 查询sql
+
+    2>定义并使用光标,查询用户表中的名字和年龄
+     set serveroutput on
+     declare 
+     --定义一个查询用户表的名字和年龄的光标
+     cursor finduser is select name,age from t_user;
+     --定义两个引用变量，用来保存查到的用户名和用户年龄
+     username t_user.name%type;
+     userage t_user.age%type;
+     begin
+     --打开光标
+        open finduser;
+     --循环获取光标中记录
+        loop
+        fetch finduser into username,userage;
+        DBMS_OUTPUT.PUT_LINE(username || '的年龄是' || userage);
+     --当光标中无指向记录时循环退出
+        exit when finduser%notfound;
+        end loop;
+     end;
+
+    3>带参数的光标
+      定义语法:cursor 光标名(参数名 参数类型) is 查询sql
+       --根据部门号查询名字和工资(带参数)
+      set serveroutput on
+      declare 
+        cursor findemp(dno number) is select ename,sal from emp where deptno = dno;
+        empname emp.ename%type;
+        empsalary emp.sal%type;
+      begin
+        open findemp(20);
+        loop
+        fetch findemp into empname,empsalary;
+        exit when findemp%notfound;
+        DBMS_OUTPUT.PUT_LINE(empname || '的工资是' || empsalary);
+        end loop;
+        close findemp;
+      end;
+
+
+16、什么是例外？
+    1>Oracle中的例外就相当于异常
+    2>常见系统例外
+      no_data_found//没有找到数据例外
+      too_many_rows//匹配了多行例外
+      zero_divide//除数为0例外
+      value_error//算术或转换例外
+    3>自定义例外
+
+
+17、oracle触发器
+    1>触发器就是在(插入、删除、修改等事件发生的时候，自动执行一系列sql语句)
+      触发器是一个特殊的存储过程
+
+    2>创建触发器语法: create trigger 触发器名字
+                      before | after insert | delete | update
+                      on 表名
+                      [for each row]
+                      sql语句集
+
+    3>没有for each row是语句级触发器，即该触发器只会在指定的操作中执行，而不管影响了多少行
+ 
+    4>有 for each row是行级触发器，即每行数据变化都会触发一次触发器，:old旧值，:new新值
+
+    5>查询表上的触发器
+      select trigger_name from all_triggers where table_name = 'EMP';
+
+    6>删除触发器
+      drop trigger 触发器名字
+
+    7>例子:
+      1、创建一个添加员工的时候打印添加员工成功，的触发器
+         create trigger addemp
+         after insert
+         on emp
+         begin
+           dbms_output.put_line('添加员工成功');
+         end;
+
+      2、禁止在非工作时间加入新员工
+         create or replace trigger addnewemp
+         before insert
+         on emp
+         for each row
+         begin
+           if to_char(sysdate,'day') in ('星期六','星期日') or
+              to_number(to_char(sysdate,'hh24')) not between 9 and 18 then 
+              raise_application_error(-2001,'禁止在非工作期间添加新员工');
+           end if;
+         end;
+       
+       3、工资不能越涨越少
+          create trigger addsalary
+          before update
+          on emp
+          begin
+            if :new.sal < :old.sal then
+               raise_application_error(-20001,'涨前工资:' || :old.sal || '涨后工资:' || :new.sal || '不科学');
+            end if;
+          end;
+                       
+
+18、oracle存储过程
+    1>存储过程就相当于C语言中的函数，用于完成特定的功能
+    
+    2>创建存储过程语法
+      create proceduer 存储过程名[in参数,out参数]
+      as
+      sql语句集
+    
+    3>调用存储过程的两种方法
+      1、exec 存储过程名+();
+
+      2、begin
+           存储过程名+();
+         end;
+      
+      3、一般不在存储过程或存储函数中commit和rollback
+
+      4、例子
+         1>创建一个输出hello word的存储过程
+       
+         2>创建一个为指定员工增加100块钱工资并打印涨前和涨后工资的存储过程
+
+         3>创建一个查询某个员工的年收入的存储函数
+           create or replace function querysalyear(no in number)
+           return number
+           as
+           salary emp.sal%type;
+           extresal emp.comm%type;
+           begin
+             select sal,comm into salary,extrasal where emono = no;
+             return salary * 12 + nvl(extrasal,0);//extrasal为空时转换为0
+           end;
+           调用函数:
+           variable a number;
+           begin
+             :a:= querysalyear(7839);
+           end;
+           /
+           print a;
+       
+         4>创建一个查询员工的姓名、月薪和职位的存储过程(带输入输出参数)
+
+19、使用Java连接oracle数据库并且调用存储过程（查询员工的姓名、月薪和职位的存储过程）
+    1>oracle安装目录下找到jdbc/lib中的jar包 导入项目中
+
+    2>jdbc连接数据库,反射类，DriverManager获取连接对象
+
+    3>//调用存储过程的sql
+      String sql = "{call queryperson(?,?,?,?)}";
+      CallableStatement call = conn.prepareCall(sql);
+      //设置输入参数
+      call.setInt(1, 7839);
+      //声明输出参数
+      call.registerOutParameter(2, OracleTypes.VARCHAR);
+      call.registerOutParameter(3, OracleTypes.NUMBER);
+      call.registerOutParameter(4, OracleTypes.VARCHAR);
+      //执行
+      call.execute();
+      //取出结果
+      String name = call.getString(2);
+      double salary = call.getDouble(3);
+      String job = call.getString(4);
+      System.out.println(name + " " + salary + " " + job);
+
+
+20、oracle中的序列
+    1>oracle中没有像SQLserver中的identity和MySQL中的auto_increment使主键自增
+
+    2>oracle要实现主键自增，需要使用序列+触发器
+
+    3>创建序列的语法
+      create sequence 序列名
+      increment by n           //每次增加多少
+      start with n             //开始值
+      maxvalue n || nomaxvalue //最大值
+      minvalue n || nominvalue //最小值
+      cycle || nocycle         //是否循环
+      cache || nocache         //是否启用缓存
+
+    4>使用序列+触发器实现主键自动增长功能
+      create sequence seq_id_t5
+      increment by 1 
+      start with 1
+      nomaxvalue
+      nocycle
+      nocache;
+
+      create or replace trigger adduser
+      before insert
+      on t_user
+      for each row
+      begin
+        --这里的dual表，是Oracle中的虚拟表，用来构成select语法规则
+        select seq_id_t5.nextval into :new.id from dual;
+      end;
+      /
+
+21、oracle中的分页实现
+    //Rownum称为“伪列”
+    select * from (select e.* ,rownum m from emp e where rownum <= 5) where m >= 0;
+
+
+22、oracle创建视图
+    create or replace view myview
+    as
+    select name,score from t_student s inner join t_score ss where s.id = ss.studentId
+
+
+
+23、oracle创建索引
+    create index index_id on t_student(id);
+
+
+
+
