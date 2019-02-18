@@ -1,0 +1,16 @@
+2019-02-16
+1、java异常机制
+                Error一般是指虚拟机相关的问题，如系统崩溃，虚拟机出错误等，这种错误无法恢复或不可能捕获，将导致应用程序中断，通常不处理。
+    Throwable-->            checked异常(编译时异常)，需要显式try-catch捕获
+	            Exception-->
+				            RunTimeException(运行时异常)，运行时错误是不会在程序中用try-catch块来声明的，
+							因为如果出现这种错误我们会修改自己的代码纠正错误，而不是用try-catch块来捕获。
+							
+2、接口成员变量和方法的原型是
+
+    接口成员变量: public static final String NAME="fagergerge"; 等价于 String NAME="fagergerge";
+                 
+    接口方法:public abstract void myTest(); 等价于 void myTest();
+	
+	jdk1.8之后接口中可以定义带方法体的静态方法，static void myStaticMethod(){};
+	

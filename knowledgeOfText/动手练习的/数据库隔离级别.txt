@@ -1,0 +1,255 @@
+1、事务需要遵循的原则
+   1>原子性(A)：事务开始后所有操作，要么全部做完，要么全部不做，不可能停滞在中间环节。
+                事务执行过程中出错，会回滚到事务开始前的状态，所有的操作就像没有发生一样。
+				也就是说事务是一个不可分割的整体，就像化学中学过的原子，是物质构成的基本单位。
+   2>一致性(C)：事务开始前和结束后，数据库的完整性约束没有被破坏 。比如A向B转账，不可能A扣了钱，B却没收到。
+   3>隔离性(I)：同一时间，只允许一个事务请求同一数据，不同的事务之间彼此没有任何干扰。
+                比如A正在从一张银行卡中取钱，在A取钱的过程结束前，B不能向这张卡转账。
+   4>持久性(D)：事务完成后，事务对数据库的所有更新将被保存到数据库，不能回滚。
+   
+2、什么是事务，及事务的作用
+   事务:一个逻辑里的一系列操作，要么所有的操作都完成，要么一个操作都不完成。
+   作用:保证数据的一致性和完整性。
+
+3、并发下事务会产生的问题
+   1>脏读，事务A读取到了事务B还未提交的数据
+   2>不可重复读，在一个事务里读取了两次某个数据，读出来的数据不一致。
+   3>幻读，在一个事务里面的操作中发现了未被操作的数据。
+     事例：程序员某一天去消费，花了2千元，然后他的妻子去查看他今天的消费记录（全表扫描FTS，妻子事务开启），
+	       看到确实是花了2千元，就在这个时候，程序员花了1万买了一部电脑，即新增INSERT了一条消费记录，并提交。
+		   当妻子打印程序员的消费记录清单时（妻子事务提交），发现花了1.2万元，似乎出现了幻觉，这就是幻读。
+
+
+4、事务的隔离级别
+
+   1>读未提交(READ_UNCOMMITTED),可以读到没有被提交的数据。
+     事例：老板要给程序员发工资，程序员的工资是3.6万/月。但是发工资时老板不小心按错了数字，按成3.9万/月，
+	       该钱已经打到程序员的户口，但是事务还没有提交，就在这时，程序员去查看自己这个月的工资，
+		   发现比往常多了3千元，以为涨工资了非常高兴。但是老板及时发现了不对，马上回滚差点就提交了的事务，将数字改成3.6万再提交。
+     分析：实际程序员这个月的工资还是3.6万，但是程序员看到的是3.9万。他看到的是老板还没提交事务时的数据。这就是脏读。
+	 
+   2>读已提交(READ_COMMITTED),一个事务要等另一个事务提交后才能读取数据。解决脏读问题。
+     事例：程序员拿着信用卡去享受生活（卡里当然是只有3.6万），当他埋单时（程序员事务开启），收费系统事先检测到他的卡里有3.6万，
+	       就在这个时候！！程序员的妻子要把钱全部转出充当家用，并提交。当收费系统准备扣款时，再检测卡里的金额，
+		   发现已经没钱了（第二次检测金额当然要等待妻子转出金额事务提交完）。程序员就会很郁闷，明明卡里是有钱的…
+
+     分析：这就是读提交，若有事务对数据进行更新（UPDATE）操作时，读操作事务要等待这个更新操作事务提交后才能读取数据，
+	       可以解决脏读问题。但在这个事例中，出现了一个事务范围内两个相同的查询却返回了不同数据，这就是不可重复读。
+		   
+   3>重复读(REPEATABLE_READ),读取了一条记录,事务不结束，别的事务就不能修改这条记录。
+     事例：程序员拿着信用卡去享受生活（卡里当然是只有3.6万），当他埋单时（事务开启，不允许其他事务的UPDATE修改操作），
+	       收费系统事先检测到他的卡里有3.6万。这个时候他的妻子不能转出金额了。接下来收费系统就可以扣款了。
+
+     分析：重复读可以解决不可重复读问题。写到这里，应该明白的一点就是，不可重复读对应的是修改，即UPDATE操作。
+	       但是可能还会有幻读问题。因为幻读问题对应的是插入INSERT操作，而不是UPDATE操作
+
+   4>串行化(SERLALIZABLE),不管多少个事务,挨个运行完一个事务里的所有子事务之后,才可以执行别的事务里的子事务。
+     Serializable 是最高的事务隔离级别，在该级别下，事务串行化顺序执行，可以避免脏读、不可重复读与幻读。
+	 但是这种事务隔离级别效率低下，比较耗数据库性能，一般不使用。
+	 
+    值得一提的是：大多数数据库默认的事务隔离级别是Read committed，比如Sql Server , Oracle。Mysql的默认隔离级别是Repeatable read。
+   
+5、数据库设计三范式
+   1>第一范式：每列的原子性，每列都是不可以再分的。如联系方式列可以拆分为手机号码、电话号码、QQ、微信等才符合原子性。
+   2>第二范式：满足第一范式的前提下，表中的每列都和主键相关,而不是只与主键某一部分相关。不能有部分依赖，部分依赖的前提条件是有组合主键。
+               如订单编号、商品编号为联合主键，此表中有商品名称、单位、价格只和商品编号相关的列；那么商品名称、单位、价格就是和主键部分依赖
+			   不符合第二范式。
+   3>第三范式：满足第一第二范式的前提下，每列和主键都是直接相关而不是间接相关。
+
+
+6、悲观锁：解释一：
+				悲观锁是指对数据被外界（包括本系统当前的其他事务，以及来自外部系统的事务处理）修改持保守态度，因此，
+				在整个数据处理过程中，将数据处于锁定状态，在悲观锁的情况下，为了保证事务的隔离性，就需要一致性锁定读。
+				读取数据时给加锁，其它事务无法修改这些数据。修改删除数据时也要加锁，其它事务无法读取这些数据。
+		   解释二：
+				在关系数据库管理系统里，悲观并发控制（又名“悲观锁”，Pessimistic Concurrency Control，缩写“PCC”）是一种并发控制的方法。
+				它可以阻止一个事务以影响其他用户的方式来修改数据。如果一个事务执行的操作都某行数据应用了锁，那只有当这个事务把锁释放，
+				其他事务才能够执行与该锁冲突的操作。
+			   
+           每次去拿数据的时候都认为别人会修改，所以每次在拿数据的时候都会上锁，这样别人想拿这个数据就会block直到它拿到锁，适用于写比较多的情况。
+		   
+		   锁类型：
+				MySQL InnoDB对数据行的锁定类型一共有四种：共享锁（读锁，S锁）、排他锁（写锁，X锁）、意向共享锁（IS锁）和意向排他锁（IX锁）。
+		   
+		   什么时候使用悲观锁？
+				一旦通过悲观锁锁定一个资源，那么其他需要操作该资源的使用方，只能等待直到锁被释放，好处在于可以减少并发，
+				但是当并发量非常大的时候，由于锁消耗资源，并且可能锁定时间过长，容易导致系统性能下降，资源消耗严重。
+				因此一般我们可以在并发量不是很大，并且出现并发情况导致的异常用户和系统都很难以接受的情况下，会选择悲观锁进行。
+		   
+		   悲观锁处理流程：
+				在对任意记录进行修改前，先尝试为该记录加上排他锁（exclusive locking）
+				如果加锁失败，说明该记录正在被修改，那么当前查询可能要等待或者抛出异常
+				如果成功加锁，那么就可以对记录做修改，事务完成后就会解锁了
+				其间如果有其他对该记录做修改或加排他锁的操作，都会等待我们解锁或直接抛出异常
+			
+		   mysql悲观锁实现：
+				在使用mysql悲观锁之前，我们需要关闭mysql数据库中的“自动提交”属性（set autocommit=0;），因为在mysql中默认使用的是"autocommit模式"。
+				在默认模式下，执行完一个数据库更新操作后，mysql会立即将结果进行提交。
+            悲观锁使用的示例代码如下：
+				开始事务。begin;/begin work;/start transaction; (三者选一即可)
+				查询商品信息。select status from item where id=1 for update;
+				插入订单数据。insert into order (id,item_id) values (null,1);
+				修改商品状态。update item set status=2;
+				事务提交。commit;/commit work;（二选一即可）
+				select…for update
+				上面的查询语句中，我们使用了select…for update的方式，这样就通过开启排他锁的方式实现了悲观锁。
+				此时在item表中，id为1的那条数据就被我们锁定了，其它的事务必须等本次事务提交之后才能执行。
+				这样我们可以保证当前的数据不会被其它事务修改。     
+				使用select…for update会把数据给锁住，不过我们需要注意一些锁的级别，MySQL InnoDB默认Row-Level Lock，所以只有「明确」地指定主键/索引，
+				MySQL 才会执行Row lock (只锁住被选取的数据) ，否则MySQL 将会执行Table Lock (将整个数据表单给锁住)。
+				
+		   悲观锁优点：
+				悲观并发控制实际上是“先取锁再访问”的保守策略，为数据处理的安全提供了保证。
+				悲观锁基于DB层面实现，对业务代码无入侵，使用方便
+			
+		   悲观锁缺点：
+				悲观锁适用于可靠的持续性连接，诸如C/S应用。 对于Web应用的HTTP连接，先天不适用
+				锁的使用意味着性能的损耗，在高并发、锁定持续时间长的情况下，尤其严重。 Web应用的性能瓶颈多在数据库处，使用悲观锁，进一步收紧了瓶颈
+				非正常中止情况下的解锁机制，设计和实现起来很麻烦，成本还很高
+				不够严谨的设计下，可能产生莫名其妙的，不易被发现的死锁问题
+				悲观的缺陷是不论是页锁还是行锁，加锁的时间可能会很长，这样可能会长时间的限制其他用户的访问，也就是说悲观锁的并发访问性不好
+
+
+7、乐观锁：每次去拿数据的时候都认为别人不会修改，所以不会上锁，但是在更新的时候会判断一下在此期间别人有没有去更新这个数据，可以使用版本号等机制。
+           适用于写比较少的情况
+
+8、spring事务传播特性
+   事务传播行为就是多个事务方法相互调用时，事务如何在这些方法间传播。spring支持7种事务传播行为：
+		1>propagation_required(默认)：如果当前没有事务，就新建一个事务，如果已存在一个事务中，加入到这个事务中，这是最常见的选择。例子:
+		                                //student类
+										//事务特性
+										@Transactional(propagation = Propagation.REQUIRED)
+										public void addStudent(){
+											String sql = "insert into student(name) values('st0')";
+											jdbcTemplate.execute(sql);
+											//这里调用teacher类的方法，如果此时已经存在事务则加入存在的事务，否则开启事务；所以addTeacher异常时，整个事务回滚。
+											tService.addTeacher();
+											throw new RuntimeException();
+										}
+										//teacher类
+										@Transactional(propagation = Propagation.REQUIRES)
+										public void addTeacher(){
+												String sql = "insert into teacher(name) values ('t5')";
+												jdbcTemplate.execute(sql);
+										}
+										经测试调用addStudent(),抛出异常，学生数据和教师数据都未被正确提交。即整个事务回滚。
+
+
+		2>propagation_supports：自身不会开启事务，在事务范围内则使用相同事务，否则不使用事务
+		                            //student类
+									@Transactional(propagation = Propagation.SUPPORTS)
+									public void addStudent(){
+										   String sql = "insert into student(name) values('st5')";
+										   jdbcTemplate.execute(sql);
+										   tService.addTeacher();
+										   throw new RuntimeException();
+									}
+									
+									//teacher类
+									@Transactional(propagation = Propagation.SUPPORTS)
+									public void addTeacher(){
+										   String sql = "insert into teacher(name) values ('t5')";
+										   jdbcTemplate.execute(sql);
+									}
+									经测试调用addStudent(),如果在addStudent6中抛出异常，学生数据和教师数据都被正确提交。
+									说明sService和tService没有被spring管理和开启事务，而是使用了本地事务，
+									由于本地事务默认自动提交因此数据都提交成功，但它们使用的却不是同一个事务，一旦出现异常将导致数据的不一致。
+		
+		3>propagation_mandatory：自身不开启事务，必须在事务环境使用否则报错
+									@Transactional(propagation = Propagation.MANDATORY)
+									public void addStudent1(){
+										   String sql = "insert into student(name) values('st1')";
+										   jdbcTemplate.execute(sql);
+									}
+									经测试调用addStudent1(),代码报错。
+                                    org.springframework.transaction.IllegalTransactionStateException: 
+									No existing transaction found for transaction marked with propagation 'mandatory'，
+									没有找到事务环境。
+
+									
+		4>propagation_required_new：新建事务，如果当前存在事务，把当前事务挂起。无论何时自身都会开启事务。
+		                            //student类
+									@Transactional(propagation = Propagation.REQUIRES_NEW)
+									public void addStudent(){
+										   String sql = "insert into student(name) values('st5')";
+										   jdbcTemplate.execute(sql);
+										   //无异常
+										   tService.addTeacher();
+										   throw new RuntimeException();
+									}
+									
+									//teacher类
+									@Transactional(propagation = Propagation.REQUIRES_NEW)
+									public void addTeacher(){
+										   String sql = "insert into teacher(name) values ('t5')";
+										   jdbcTemplate.execute(sql);
+									}
+									调用addStudent()抛出异常，那么学生信息提交失败，但是老师信息提交成功。所以addStudent()和addTeacher()运行于两个独立事务。
+
+		
+		5>propagation_not_supported：自身不会开启事务，在事务范围内使用挂起事务，运行完毕恢复事务
+										//student类
+										@Transactional(propagation = Propagation.NOT_SUPPORTED)
+										public void addStudent4(){//自身不开启事务
+											   String sql = "insert into student(name) values('st4')";
+											   jdbcTemplate.execute(sql);
+											   throw new RuntimeException();
+										}
+                                        测试1：经测试调用addStudent4(),如果在addStudent4中抛出异常，学生数据正确提交。说明sService没有被spring管理和开启事务，
+										       而是使用了本地事务，由于本地事务默认自动提交因此数据都提交成功。										
+
+										
+										
+										@Transactional(propagation = Propagation.REQUIRED)
+										public void addStudent(){
+											   String sql = "insert into student(name) values('st0')";
+											   jdbcTemplate.execute(sql);
+											   tService.addTeacher4();
+										}
+										@Transactional(propagation = Propagation.NOT_SUPPORTED)
+										public void addTeacher4(){
+											   String sql = "insert into teacher(name) values ('t4')";
+											   jdbcTemplate.execute(sql);
+											   throw new RuntimeException();
+										}
+										测试2：经测试调用addStudent4(),如果在addTeacher4中抛出异常，学生数据提交失败，教师数据提交成功。
+										       说明sService开启了事务，tService没有开启事务，而是使用了本地事务。
+
+										
+		
+		6>propagation_never：自身不会开启事务，在事务范围使用抛出异常
+								@Transactional(propagation = Propagation.REQUIRED)
+								public void addStudent(){
+									   String sql = "insert into student(name) values('st0')";
+									   jdbcTemplate.execute(sql);
+									   tService.addTeacher3();
+								}
+								@Transactional(propagation = Propagation.NEVER)
+								public void addTeacher3(){
+									   String sql = "insert into teacher(name) values ('t3')";
+									   jdbcTemplate.execute(sql);
+								}
+								调用addStudent(),代码报错，由于sService开启了事务，当调用sService方法时由于其传播特性为never，因此报存在事务错误。
+                                org.springframework.transaction.IllegalTransactionStateException: 
+								Existing transaction found for transaction marked with propagation 'never'
+
+
+
+		
+		7>propagation_nested：如果当前存在事务，则在嵌套事务内执行。如果当前没有事务，则按propagation_required属性执行
+		                        @Transactional(propagation = Propagation.NESTED)
+								public void addStudent2(){
+									   String sql = "insert into student(name) values('st2')";
+									   jdbcTemplate.execute(sql);
+									   tService.addTeacher2();
+									   throw new RuntimeException();
+								}
+								@Transactional(propagation = Propagation.NESTED)
+								public void addTeacher2(){
+									   String sql = "insert into teacher(name) values ('t2')";
+									   jdbcTemplate.execute(sql);
+								}
+								调用addStudent2(),代码报错，教师数据和学生数据都没有提交成功。说明其按照REQUIRED特性运行。
+								对于嵌套事务，大家可以模拟两个数据源，一方的失败不会影响另一方。
+
+
