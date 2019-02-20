@@ -110,3 +110,10 @@ public class DeadLock extends Thread {
 
 
 11、生产者消费者的编程实现
+
+
+12、线程之间是如何通信的
+    1>通过共享内存区域，synchronized关键字
+	2>while轮询的方式，线程不停地通过while语句检测这个条件(list.size()==5)是否成立 ，从而实现了线程间的通信。
+	3>wait/notify机制
+	4>管道通信就是使用java.io.PipedInputStream 和 java.io.PipedOutputStream进行通信
