@@ -117,3 +117,164 @@ public class DeadLock extends Thread {
 	2>while轮询的方式，线程不停地通过while语句检测这个条件(list.size()==5)是否成立 ，从而实现了线程间的通信。
 	3>wait/notify机制
 	4>管道通信就是使用java.io.PipedInputStream 和 java.io.PipedOutputStream进行通信
+	
+13、线程池工作原理
+
+14、一个web请求是一个线程吗？
+    一个http请求，就是一个线程，Tomcat会维护一个线程池
+
+
+15、Tomcat是如何处理http请求的？
+    对tomcat来说，每一个进来的请求(request)都需要一个线程，直到该请求结束。
+	如果同时进来的请求多于当前可用的请求处理线程数，额外的线程就会被创建，直到到达配置的最大线程数(maxThreads属性值)。
+	如果仍就同时接收到更多请求，这些来不及处理的请求就会在Connector创建的ServerSocket中堆积起来，直到到达最大的配置值(acceptCount属性值)。
+	至此，任何再来的请求将会收到connection refused错误，直到有可用的资源来处理它们。实现达到Tomcat的最大连接数然后抛出错误。
+	
+	tomcat的http connector有三种：bio、nio、apr。
+	查阅http://tomcat.apache.org/tomcat-7.0-doc/config/http.html配置文档Connector Comparison部分便可获知各种connector实现间的差异。
+	怎样才能知道容器使用的是何种connector实现？启动tomcat后，访问Server Status Page，看到如下信息即可知道使用的是何种connector
+	
+	OS是windows，所以tomcat默认使用的是aprconnector。在linux上，默认使用的是bio connector。与nio相比，bio性能较低。
+	
+	Bio模式
+	    bio(blocking I/O)是指阻塞式I/O操作，Tomcat在默认情况下就是以bio模式运行的。这可以从守护线程的信息看出来。
+		
+		bio缺点：1.当客户端多时，会创建大量的处理线程。每个线程都要占用栈空间和一些CPU时间。 
+                 2.阻塞可能带来频繁的上下文切换，而大部分的上下文切换是无意义的。
+	
+	Nio模式
+		要让Tomcat以nio模式来运行也比较简单，我们只需要修改下server.xml文件：
+		<Connector port="8080" protocol="HTTP/1.1" 
+				   connectionTimeout="20000" 
+				   redirectPort="8443" />
+		改为-->
+		<Connector port="8080" protocol="org.apache.coyote.http11.Http11NioProtocol" 
+				   connectionTimeout="20000" 
+				   redirectPort="8443" />
+				   
+	    NIO的工作原理包括： 
+		1.由一个专门的线程来处理所有的 I/O 事件、并负责分发。 
+		2.事件驱动机制，而不再同步地去监视事件。 
+		3.线程之间通过 wait,notify 等方式通讯。保证每次上下文切换都是有意义的，减少无谓的线程切换
+		NIO采用了双向通道(channel)进行数据传输，而不是单向的流(stream)。
+		
+	Apr模式		   
+		apr(Apache portable Run-time libraries/Apache可移植运行库)是Apache HTTP服务器的支持库。
+		在apr模式下，Tomcat将以JNI(Java Native Interface)的形式调用Apache HTTP服务器的核心动态链接库来处理文件读取或网络传输操作，
+		从而大大提高Tomcat对静态文件的处理性能。Tomcat apr是在Tomcat上运行高并发应用的首选模式。
+		而要让Tomcat以apr模式运行，对于Tomcat 7.0.30开始向后的版本，只需要再次修改protocol为”org.apache.coyote.http11.Http11AprProtocol”即可。
+		
+16、NIO和BIO的原理及优缺点
+
+17、如何加大tomcat连接数
+	在tomcat配置文件server.xml中的<Connector />配置中，和连接数相关的参数有：
+	minProcessors：最小空闲连接线程数，用于提高系统处理性能，默认值为10
+	maxProcessors：最大连接线程数，即：并发处理的最大请求数，默认值为75
+	acceptCount：允许的最大连接数，应大于等于maxProcessors，默认值为100
+	enableLookups：是否反查域名，取值为：true或false。为了提高处理能力，应设置为false
+	connectionTimeout：网络连接超时，单位：毫秒。设置为0表示永不超时，这样设置有隐患的。通常可设置为30000毫秒。
+	其中和最大连接数相关的参数为maxProcessors和acceptCount。如果要加大并发连接数，应同时加大这两个参数。
+	web server允许的最大连接数还受制于操作系统的内核参数设置，通常Windows是2000个左右，Linux是1000个左右。tomcat5中的配置示例：
+		<Connector port="8080"
+				  maxThreads="150" minSpareThreads="25"maxSpareThreads="75"
+				  enableLookups="false" redirectPort="8443"acceptCount="100"
+				  debug="0" connectionTimeout="20000" 
+				  disableUploadTimeout="true" />
+	对于其他端口的侦听配置，以此类推。
+	
+18、如何加大tomcat可以使用的内存
+	tomcat默认可以使用的内存为128MB，在较大型的应用项目中，这点内存是不够的，需要调大。
+	Unix下，在文件{tomcat_home}/bin/catalina.sh的前面，增加如下设置：
+	JAVA_OPTS='-Xms【初始化内存大小】 -Xmx【可以使用的最大内存】'
+	需要把这个两个参数值调大。例如：
+	JAVA_OPTS='-Xms256m -Xmx512m'
+	表示初始化内存为256MB，可以使用的最大内存为512MB
+
+19、如何开始一个http请求
+    1>http请求和响应步骤：
+		1)建立TCP连接(TCP三次握手)。
+		2)web浏览器向web服务器发送请求命令，如GET/sample/hello.jsp HTTP/1.1。
+		3)web浏览器发送请求头信息，如user-agent,host等关于自身的信息，最后发送一个空请求头代表请求头信息发送完毕。
+		  如果是post提价会继续提交请求体。
+		4)web服务器应答，应答第一部分是版本号和协议状态码 HTTP/1.1 200 ok。
+		5)web服务发送应答头信息，关于自己的信息及被请求的文档，最后发送一个空白行代表头信息发送结束。
+		6)web服务器向浏览器发送数据，以Context-Type应答头信息所描述的格式发送用户所请求的实际数据。
+		7)web服务器关闭TCP连接，一旦web服务器向浏览器发送了请求数据就需要关闭tcp连接(无状态连接)。如果添加connection:keep-alive将不会关闭TCP连接。
+	2>TCP三次握手：
+	    TCP是面向连接的，无论哪一方向另一方发送数据之前，都必须先在双方之间建立一条连接，通过三次握手进行TCP连接的初始化。
+		第一次握手：建立连接。客户端发送连接请求报文段，将SYN位置为1，Sequence Number为x；然后，客户端进入SYN_SEND状态，等待服务器的确认；
+		第二次握手：服务器收到SYN报文段。服务器收到客户端的SYN报文段，需要对这个SYN报文段进行确认，设置Acknowledgment Number为x+1(Sequence Number+1)；
+		            同时，自己自己还要发送SYN请求信息，将SYN位置为1，Sequence Number为y；服务器端将上述所有信息放到一个报文段（即SYN+ACK报文段）中，
+					一并发送给客户端，此时服务器进入SYN_RECV状态；
+		第三次握手：客户端收到服务器的SYN+ACK报文段。然后将Acknowledgment Number设置为y+1，向服务器发送ACK报文段，
+		            这个报文段发送完毕以后，客户端和服务器端都进入ESTABLISHED状态，完成TCP三次握手。
+	3>为什么要三次握手：
+      为了防止已失效的连接请求报文段突然又传送到了服务端，因而产生错误。具体例子:
+	  client发出的第一个连接请求报文段由于网络原因，延迟到达server(失效的连接请求)，server接收到该失效连接请求后误认为是client发出的新的连接请求，
+	  于是向client发出确认报文段，同意建立连接，如果不用三次握手，那么只要server发出确认新的连接就建立了。但是由于client实际上没有发出新的连接请求，
+	  所以不会向server送数据，而server却一直在等client发送数据，这样就造成了server资源的浪费。使用三次握手就不会有这个问题。
+	  
+	4>TCP关闭连接的四次挥手：
+	第一次分手：主机1（可以使客户端，也可以是服务器端），设置Sequence Number，向主机2发送一个FIN报文段；此时，主机1进入FIN_WAIT_1状态；
+				这表示主机1没有数据要发送给主机2了；
+	第二次分手：主机2收到了主机1发送的FIN报文段，向主机1回一个ACK报文段，Acknowledgment Number为Sequence Number加1；主机1进入FIN_WAIT_2状态；
+				主机2告诉主机1，我“同意”你的关闭请求；
+	第三次分手：主机2向主机1发送FIN报文段，请求关闭连接，同时主机2进入LAST_ACK状态；
+	第四次分手：主机1收到主机2发送的FIN报文段，向主机2发送ACK报文段，然后主机1进入TIME_WAIT状态；主机2收到主机1的ACK报文段以后，就关闭连接；
+				此时，主机1等待2MSL后依然没有收到回复，则证明Server端已正常关闭，那好，主机1也可以关闭连接了。
+	  
+20、什么是http
+    http是计算机通过网络进行通信的规则，是一个基于请求与响应，无状态的，应用层的协议，常基于TCP/IP协议传输数据。
+	请求与响应：客户端发送请求，服务器端响应数据。
+	无状态的：协议对于事务处理没有记忆能力，客户端第一次与服务器建立连接发送请求时需要进行一系列的安全认证匹配等，
+	          因此增加页面等待时间，当客户端向服务器端发送请求，服务器端响应完毕后，两者断开连接，也不保存连接状态，一刀两断！恩断义绝！从此路人！
+			  下一次客户端向同样的服务器发送请求时，由于他们之前已经遗忘了彼此，所以需要重新建立连接。
+	应用层：Http是属于应用层的协议，配合TCP/IP使用。
+    TCP/IP：Http使用TCP作为它的支撑运输协议。HTTP客户机发起一个与服务器的TCP连接，一旦连接建立，浏览器（客户机）和服务器进程就可以通过套接字接口访问TCP。
+	
+21、针对http无状态的一些解决策略
+    有时需要对用户之前的HTTP通信状态进行保存，比如执行一次登陆操作，在30分钟内所有的请求都不需要再次登陆。于是引入了Cookie技术。
+	HTTP/1.1想出了持久连接（HTTP keep-alive）方法。其特点是，只要任意一端没有明确提出断开连接，则保持TCP连接状态，
+	在请求首部字段中的Connection: keep-alive即为表明使用了持久连接。
+	
+22、一个http请求什么时候断开连接
+    http协议，只要response回来了，这次连接就断开了。这里不能使用多线程。
+	
+23、什么是短连接和长连接
+    长连接：client方与server方先建立连接，连接建立后不断开，然后再进行报文发送和接收。这种方式下由于通讯连接一直存在。此种方式常用于P2P点对点的通信。
+    长连接的操作步骤是：建立连接——数据传输...（保持连接）...数据传输——关闭连接
+	长连接适用场景：监控系统：后台硬件热插拔、LED、温度、电压发生变化；
+                    即时通信系统：其它用户登录、发送信息；
+					即时报价系统：后台数据库内容发生变化；
+					像以上这些连接，如果每次操作都要建立连接然后再操作的话处理速度会降低。
+					所以操作时第一次连接上以后，以后每次直接发送数据就可以了，不用再建立TCP连接。
+					再比如：数据库的连接用长连接，如果用短连接频繁的通信会造成socket错误，频繁的socket创建也是对资源的浪费。
+					
+	短连接：Client方与server每进行一次报文收发交易时才进行通讯连接，交易完毕后立即断开连接。此方式常用于一点对多点通讯。
+    短连接的操作步骤是：建立连接——数据传输——关闭连接...建立连接——数据传输——关闭连接。
+	短连接的适用场景：短连接多用于操作频繁，点对点的通讯，而且连接数不能太多的情况。每个TCP连接的建立都需要三次握手，每个TCP连接的断开要四次握手。
+	                  web网站的http服务一般都用短连接。因为长连接对于服务器来说要耗费一定的资源。
+					  像web网站这么频繁的成千上万甚至上亿客户端的连接用短连接更省一些资源。试想如果都用长连接，而且同时用成千上万的用户，
+					  每个用户都占有一个连接的话，可想而知服务器的压力有多大。所以并发量大，但是每个用户又不需频繁操作的情况下需要短连接。
+					  总之：长连接和短连接的选择要视需求而定。
+
+					
+24、Comet
+以前的http的长连接技术不成熟，目前有新技术名叫Comet：基于 HTTP 长连接的“服务器推”技术。
+案例：基于 AJAX 的长轮询（long-polling）方式
+AJAX 的出现使得 JavaScript 可以调用 XMLHttpRequest 对象发出 HTTP 请求，JavaScript 响应处理函数根据服务器返回的信息对 HTML 页面的显示进行更新。
+使用 AJAX 实现“服务器推”与传统的 AJAX 应用不同之处在于执行顺序及内容：
+1.服务器端会阻塞请求直到有数据传递或超时才返回。
+2.客户端 JavaScript 响应处理函数会在处理完服务器返回的信息后，再次发出请求，重新建立连接。
+3.当客户端处理接收的数据、重新建立连接时，服务器端可能有新的数据到达；这些信息会被服务器端保存直到客户端重新建立连接，客户端会一次把当前服务器端所有的信息取回。
+
+
+25、http请求头报文常见名词解释
+
+
+26、http响应头部常见名词解释
+    
+
+
+
+
