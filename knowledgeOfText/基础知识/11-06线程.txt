@@ -195,7 +195,8 @@ public class DeadLock extends Thread {
 		1)建立TCP连接(TCP三次握手)。
 		2)web浏览器向web服务器发送请求命令，如GET/sample/hello.jsp HTTP/1.1。
 		3)web浏览器发送请求头信息，如user-agent,host等关于自身的信息，最后发送一个空请求头代表请求头信息发送完毕。
-		  如果是post提价会继续提交请求体。
+		  如果是post提价会继续提交请求体。服务器收到请求后，实例化servlet对象(只会实例化一次)，以后的每次请求都是复用第一次实例化的servlet对象，
+		  servlet对象调用service方法处理请求，如果有多个请求要处理，则会创建多线程处理即多线程调用servlet.service()。
 		4)web服务器应答，应答第一部分是版本号和协议状态码 HTTP/1.1 200 ok。
 		5)web服务发送应答头信息，关于自己的信息及被请求的文档，最后发送一个空白行代表头信息发送结束。
 		6)web服务器向浏览器发送数据，以Context-Type应答头信息所描述的格式发送用户所请求的实际数据。
@@ -273,7 +274,24 @@ AJAX 的出现使得 JavaScript 可以调用 XMLHttpRequest 对象发出 HTTP 请求，JavaScrip
 
 
 26、http响应头部常见名词解释
-    
+
+
+27、servlet天生具有多线程性
+    servlet是单例的，是线程不安全的，即controller类实例是线程不安全的。
+	当Tomcat接收到Client的HTTP请求时，Tomcat从线程池中取出一个线程，之后找到该请求对应的Servlet对象并进行初始化，之后调用service()方法。
+	要注意的是每一个Servlet对象再Tomcat容器中只有一个实例对象，即是单例模式。
+	
+28、什么是servlet
+    servlet的本质其实也是一个java bean，controller是对servlet的封装，底层依旧是servlet。
+	servlet是单例的，浏览器请求服务器时，服务器会根据浏览器传过来的请求路径，如果是第一次请求则实例化servlet，然后调用service方法处理请求，
+	否则复用已存在的servlet实例，调用service方法处理请求，在服务器的整个生命周期中该servlet单实例是一直存在的。服务器关闭时销毁。
+	每个个servlet类只会有一个实例，如AServlet、BServlet在服务器(Tomcat)整个生命周期只会有一个AServlet和一个BServlet实例。
+	
+29、springboot中controller类默认是在容器启动时实例化的，只会实例化一次。也就是说有多少个不同的controller类就会实例化多少个不同的controller类实例。
+    但是dispatcherServlet是请求第一到来是实例化的，如
+	Initializing Spring FrameworkServlet 'dispatcherServlet'。
+	FrameworkServlet 'dispatcherServlet': initialization started。
+	FrameworkServlet 'dispatcherServlet': initialization completed in 47 ms。
 
 
 
