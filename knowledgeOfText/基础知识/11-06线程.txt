@@ -292,7 +292,61 @@ AJAX 的出现使得 JavaScript 可以调用 XMLHttpRequest 对象发出 HTTP 请求，JavaScrip
 	Initializing Spring FrameworkServlet 'dispatcherServlet'。
 	FrameworkServlet 'dispatcherServlet': initialization started。
 	FrameworkServlet 'dispatcherServlet': initialization completed in 47 ms。
+	
+30、线程之间的协作(线程之间的通信)
+    1>wait()与notifyAll()
+	  wait()在等待外部条件发生变化的时候会将任务挂起，只有在notify()或notifyAll()发生时，这个任务才回被唤醒并去检查所产生的变化。
+	  反之，如果使用循环一直对某个条件进行检测(空循环)，这就是忙等待，非常浪费cpu资源。
+	  
+	2>notifyAll()不是唤醒程序中所有的在等待的任务，而是唤醒因调用notifyAll()的对象所在锁而阻塞的所有任务。如：
+	  线程A、线程B因对象obj而wait()，而线程C因obj1而wait()，在obj中调用notifyAll()只会唤醒线程A、线程B。
+	
+31、线程机制
+    1>并发编程可以将程序划分为多个分离的、独立运行的任务。每一个独立的任务由执行它的线程来驱动。底层机制是切分cpu时间(把CPU时间轮流分给线程)。
+	
+	
+32、synchronized关键字
+    当任务要执行被synchronized保护的资源时，它将检查锁是否可用，获取锁，执行任务代码，释放锁。
+	多线程对同一个实例(对象)的同步方法的访问会阻塞，即对访问synchronizedTest的对象锁会阻塞。
+	多线程对多个实例的synchronized方法不会阻塞，只会阻塞各自的实例(对象)锁。
+	synchronized锁住的是同一对象的锁，而不是类的锁，一个类可以new多个实例对象。如果类中一个synchronized
+	调用一个非synchronized方法，这个非synchronized方法会等待，别的线程能不能访问到这个非synchronized方法呢？
+	非synchronized方法不会阻塞，也就是访问非synchronized方法不需要检查锁是否可用。
+	但是如果非synchronized方法变为synchronized那么则会获得两次对象锁，只要当这两个对象锁都释放的时候别的线程才能获取到这个对象的资源。
+	通俗地说就是每当任务进入一个synchronized方法时获得锁的计数就增加一，每当离开一个synchronized方法时，锁计数减一，当计数为零时就释放对象锁。
+	
+	synchronized块，锁定的是某个对象实例，比锁定整个方法高效。
+	
+33、volatile关键字作用
+    1>让修改立即可见，修改状态之后，立即同步到主存中，而别的线程读取数据都是从主存中拷贝一份副本。
+	
+34、防止任务在共享资源上产生冲突的方式
+    1>使用synchronized关键字
+	2>去掉共享变量
+	
+35、java内存模型(线程内存模型)
 
+36、本地线程(ThreadLocal)
+    1、使用本地线程可以去除掉共享变量。
+	2、ThreadLocal可以让原本的static全局静态变量变为每个线程都有一份，从而避免资源竞争。
+	3、ThreadLocal的实现原理：
+	每个Thread的对象都有一个内部类ThreadLocalMap，当创建一个ThreadLocal的时候，就会将该ThreadLocal对象添加到该Map中，
+	其中键就是ThreadLocal，值可以是任意类型。
+    在该类中，我觉得最重要的方法就是两个：set()和get()方法。当调用ThreadLocal的get()方法的时候，
+	会先找到当前线程的ThreadLocalMap，然后再找到对应的值。set()方法也是一样。
+	
+37、线程状态
+    1>新建
+	2>就绪
+	3>阻塞：进入阻塞状态原因，sleep、wait、等待输入/输出、对象锁已经被别的线程获取。
+	4>运行
+	5>死亡
+	
+38、线程上下文切换和进程上下文切换
+    1>一个给定进程内的所有线程共享相同的内存空间，线程的上下文切换只是改变了程序的执行序列和局部变量；
+	  而进程切换需要改变所有内存空间。
+	  
+39、生产者和消费者
 
 
 
