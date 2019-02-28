@@ -1,6 +1,7 @@
 package com.yjl.client;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
@@ -44,9 +45,10 @@ public class EchoClient {
 		}
 	}
     public static void main(String[] args) throws InterruptedException {
-		String host = "192.168.43.55";
+		String host = "192.168.233.1";
 		int port = 9898;
-		new EchoClient(host, port).start();
+		EchoClient echoClient = new EchoClient(host, port);
+		echoClient.start();
 	}
 
 }

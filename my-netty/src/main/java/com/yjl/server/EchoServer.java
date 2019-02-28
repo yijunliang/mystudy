@@ -1,6 +1,7 @@
 package com.yjl.server;
 
 import java.net.InetSocketAddress;
+import java.util.concurrent.TimeUnit;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
@@ -40,6 +41,7 @@ public class EchoServer {
 						@Override
 						public void initChannel(SocketChannel sc) throws Exception {
 							sc.pipeline().addLast(echoServerHandler);
+							
 						}
 					});
 			//异步绑定服务器，调用sync()阻塞等待，直到绑定完成

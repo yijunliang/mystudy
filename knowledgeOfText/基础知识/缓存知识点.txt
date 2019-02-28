@@ -1,0 +1,13 @@
+1、缓存原理
+   1>cpu
+   
+2、redis实现热点数据缓存
+   1>redis数据类型
+     String：可以包含任何数据，比如jpg图片(生成二进制)或者序列化的对象。
+	 hash：适合存储对象，一个对象存储在hash类型中会占用更少的内存，并且可以更方便的存取整个对象。
+	 list：每个子元素都是string类型的双向链表。
+	 set：string类型的无序集合
+	 zset：是插入有序的，即自动排序。
+	 
+3、CAP 理论
+   一致性(consistency)、可用性(availability)和分区容错(partition tolerance)这3 个要素最多同时满足两个,不可能三者兼顾.

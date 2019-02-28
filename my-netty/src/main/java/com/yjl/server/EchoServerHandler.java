@@ -1,5 +1,7 @@
 package com.yjl.server;
 
+import java.util.concurrent.TimeUnit;
+
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
@@ -20,6 +22,13 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter{
      */
 	@Override
 	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+		System.out.println("进入channelRead");
+		ctx.channel().eventLoop().scheduleAtFixedRate(new Runnable(){
+			public void run() {
+				System.out.println("每过10秒执行");
+			}
+			
+		}, 1, 10, TimeUnit.SECONDS);//60秒之后，每隔60秒执行
 		ByteBuf in = (ByteBuf) msg;
 		//输出服务器端接收到的消息
 		System.out.println("服务器接收到的信息:" + in.toString(CharsetUtil.UTF_8));
