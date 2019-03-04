@@ -1,0 +1,24 @@
+1、查看一台服务器(tomcat)的tcp连接数
+   1>列出所有端口 netstat -a 
+     协议      本地地址               外部地址             状态
+	 TCP/UDP   192.168.1.100:8080     易俊良:0             LISTENING/ESTABLISHED/TIME_WAIT/SYN_SENT
+	 
+   2>列出所有 tcp 端口, netstat -at
+   
+   3>列出所有 tcp 端口, netstat -au
+   
+   4>列出所有处于监听状态的 Sockets, netstat -l
+   
+   5>只列出所有监听 tcp 端口, netstat -lt
+   
+   6>只列出所有监听 udp 端口, netstat -lu
+   
+   7>显示所有端口的统计信息, netstat -s
+   
+   8>显示所有TCP端口的统计信息, netstat -st
+   
+   9>显示所有UDP端口的统计信息, netstat -su
+   
+   10>在netstat 输出中显示 PID 和进程名称, netstat -pt
+   
+   11>netstat 将每隔一秒输出网络信息。
