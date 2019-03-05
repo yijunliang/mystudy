@@ -515,4 +515,28 @@ AJAX 的出现使得 JavaScript 可以调用 XMLHttpRequest 对象发出 HTTP 请求，JavaScrip
 
 		每个请求单独占用一个连接，使用完以后把连接放回池中，给下一个请求使用。缺点还是网络利用率不高，因为在等待对端回复的时候，连接是空闲的
 
+46、如果controller类中的方法加上synchronized进行同步，然后让这个方法阻塞(等待很久)，别的请求会怎样？
+    别的请求会阻塞，一直等到获取锁的请求(线程)释放锁(执行完synchronized方法)。所以controller是单例的，所有的请求访问的都是同一个实例对象，
+	如果该实例对象的锁被获取并阻塞将导致所有的请求阻塞。同时controller也是多线程的，有一个请求到来，就会从线程池中取一条空闲线程处理
+	该请求任务。
+	
+47、Tomcat中的几个参数
+    1、acceptCount
+	accept队列的长度；当accept队列中连接的个数达到acceptCount时，队列满，进来的请求一律被拒绝。默认值是100。
+	
+	2、maxConnections
+	Tomcat在任意时刻接收和处理的最大连接数。当Tomcat接收的连接数达到maxConnections时，Acceptor线程不会读取accept队列中的连接；
+	这时accept队列中的线程会一直阻塞着，直到Tomcat接收的连接数小于maxConnections。如果设置为-1，则连接数不受限制。
+	默认值与连接器使用的协议有关：NIO的默认值是10000，APR/native的默认值是8192，
+	而BIO的默认值为maxThreads（如果配置了Executor，则默认值是Executor的maxThreads）。
+	在windows下，APR/native的maxConnections值会自动调整为设置值以下最大的1024的整数倍；如设置为2000，则最大值实际是1024。
+	
+	3、maxThreads
+	请求处理线程的最大数量。默认值是200（Tomcat7和8都是的）。如果该Connector绑定了Executor，这个值会被忽略，
+	因为该Connector将使用绑定的Executor，而不是内置的线程池来执行任务。
+	maxThreads规定的是最大的线程数目，并不是实际running的CPU数量；实际上，maxThreads的大小比CPU核心数量要大得多。
+	这是因为，处理请求的线程真正用于计算的时间可能很少，大多数时间可能在阻塞，如等待数据库返回数据、等待硬盘读写数据等。
+	因此，在某一时刻，只有少数的线程真正的在使用物理CPU，大多数线程都在等待；因此线程数远大于物理核心数才是合理的。
+	换句话说，Tomcat通过使用比CPU核心数量多得多的线程数，可以使CPU忙碌起来，大大提高CPU的利用率。
+
 	       
