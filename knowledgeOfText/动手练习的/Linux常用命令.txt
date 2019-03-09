@@ -22,3 +22,17 @@
    10>在netstat 输出中显示 PID 和进程名称, netstat -pt
    
    11>netstat 将每隔一秒输出网络信息。
+   
+   12>查看某个端口的tcp连接数netstat -an|grep 18001
+   
+      netstat   -an -p tcp | find "X.X.X.X:PORT" | find "ESTABLISHED" /c
+	  
+	  netstat   -an -p tcp | find "nginx"
+	  
+	  
+	  --windows下统计某个端口的tcp连接数
+netstat -ano|find "192.168.8.127:18001" /c
+
+netstat -ano |findstr 18001
+	   
+	   
