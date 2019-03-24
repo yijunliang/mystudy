@@ -33,6 +33,6 @@
 	  --windows下统计某个端口的tcp连接数
 netstat -ano|find "192.168.8.127:18001" /c
 
-netstat -ano |findstr 18001
+netstat -ano | findstr 18001
 	   
 	   
